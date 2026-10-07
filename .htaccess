@@ -1,6 +1,7 @@
 # Struck-Off Company Check: static site settings for Apache (GoDaddy cPanel hosting)
 DirectoryIndex index.html
 Options -Indexes
+ErrorDocument 404 /404.html
 
 # Force HTTPS once the site's SSL certificate is active (comment out these 3 lines if SSL is not set up yet)
 <IfModule mod_rewrite.c>

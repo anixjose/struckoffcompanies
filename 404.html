@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Struck-Off Company Check</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0e3b2e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%230e3b2e'/%3E%3Cpath d='M10 12h16M10 18h10M10 24h7' stroke='%23f4efdf' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M8 27 28 9' stroke='%23c9a227' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+:root{--ink:#0e3b2e;--ink-2:#082a20;--fg:#f4efdf;--muted:#a9c1b4;--brass:#c9a227;--brass-ink:#1d1a0c;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;--f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{color:var(--fg);font-family:var(--f-body);display:grid;place-items:center;padding-inline:20px;padding-block:32px;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px),linear-gradient(130deg,var(--ink),var(--ink-2))}
+main{max-width:34rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
+.mark{width:64px;height:64px}
+.rule{width:56px;height:3px;background:var(--brass);border-radius:2px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2rem,6vw,3rem);line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0;color:var(--muted);line-height:1.6;font-size:1.05rem}
+a.btn{display:inline-block;margin-top:6px;background:var(--brass);color:var(--brass-ink);font-weight:600;text-decoration:none;padding:12px 22px;border-radius:6px}
+a.btn:hover{filter:brightness(1.07)}
+a.btn:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+small{color:var(--muted);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<main>
+  <svg class="mark" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="8" fill="none" stroke="#f4efdf" stroke-opacity=".45" stroke-width="1.5"/><path d="M10 12h16M10 18h10M10 24h7" stroke="#f4efdf" stroke-width="2" stroke-linecap="round"/><path d="M8 27 28 9" stroke="#c9a227" stroke-width="2.4" stroke-linecap="round"/></svg>
+  <small>Struck-Off Company Check</small>
+  <h1>We will be live soon…</h1>
+  <div class="rule"></div>
+  <p>This page isn't ready yet. The company checker already works: search a name or CIN against 2,28,453 companies struck off by India's Registrars of Companies.</p>
+  <a class="btn" href="/">Open the checker</a>
+</main>
+</body>
+</html>
