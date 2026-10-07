@@ -1,0 +1,31 @@
+# Struck-Off Company Check: static site settings for Apache (GoDaddy cPanel hosting)
+DirectoryIndex index.html
+Options -Indexes
+
+# Force HTTPS once the site's SSL certificate is active (comment out these 3 lines if SSL is not set up yet)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+AddType text/plain .txt
+AddDefaultCharset utf-8
+
+# Compress the page and the 4.6 MB register file in transit
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript image/svg+xml
+</IfModule>
+
+# Cache: the page revalidates on every visit; the register file for a day (republish replaces it)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/plain "access plus 1 day"
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
