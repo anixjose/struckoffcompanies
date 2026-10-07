@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0e3b2e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%230e3b2e'/%3E%3Cpath d='M10 12h16M10 18h10M10 24h7' stroke='%23f4efdf' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M8 27 28 9' stroke='%23c9a227' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<title>Struck-Off Company Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: app bar, KPI strip, then a two-column workspace (checks on the left, register + composition charts on the right). Stacks on phones. */
+:root{
+  --bg:#edf1ea; --surface:#fffdf8; --sunk:#f5f6ee; --line:#dfe4d6; --line-strong:#c6cfbc;
+  --fg:#15241d; --muted:#56675d; --faint:#87958b;
+  --ink:#0e3b2e; --ink-2:#082a20; --ink-fg:#f4efdf; --ink-muted:#a9c1b4;
+  --accent:#1f6b4f; --accent-soft:#e2eee6; --accent-ink:#ffffff;
+  --brass:#c9a227; --brass-deep:#9c7a12; --brass-soft:#f5ecce; --brass-ink:#1d1a0c;
+  --chart:#2e7d5c; --chart-2:#a9cdb9; --chart-hi:#c9a227; --grid:#e5e9de;
+  --struck:#b3261e; --struck-bg:#fbeae8; --pending:#a35a00; --pending-bg:#fdf0dc;
+  --review:#5b47a8; --review-bg:#eeeafa; --clear:#1d7048; --clear-bg:#e3f3ea;
+  --demo:#7a5a00; --demo-bg:#fff5d1;
+  --shadow:0 1px 2px rgba(14,59,46,.07),0 6px 18px rgba(14,59,46,.06);
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1511; --surface:#10201a; --sunk:#0c1a15; --line:#1e3329; --line-strong:#2b4537;
+  --fg:#e5ece6; --muted:#9db1a5; --faint:#6e8478;
+  --ink:#0b2a20; --ink-2:#061a13; --ink-fg:#efe8d2; --ink-muted:#93ac9e;
+  --accent:#5fbf94; --accent-soft:#15302a; --accent-ink:#06140f;
+  --brass:#d9b44a; --brass-deep:#e7c66a; --brass-soft:#2c2711; --brass-ink:#161307;
+  --chart:#4fae85; --chart-2:#29573f; --chart-hi:#d9b44a; --grid:#1a2c24;
+  --struck:#ff8a80; --struck-bg:#3a1714; --pending:#f2b65c; --pending-bg:#33240f;
+  --review:#bba9f2; --review-bg:#27203f; --clear:#7fd3a6; --clear-bg:#142d22;
+  --demo:#f0cf6a; --demo-bg:#2e2710;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1511; --surface:#10201a; --sunk:#0c1a15; --line:#1e3329; --line-strong:#2b4537;
+  --fg:#e5ece6; --muted:#9db1a5; --faint:#6e8478;
+  --ink:#0b2a20; --ink-2:#061a13; --ink-fg:#efe8d2; --ink-muted:#93ac9e;
+  --accent:#5fbf94; --accent-soft:#15302a; --accent-ink:#06140f;
+  --brass:#d9b44a; --brass-deep:#e7c66a; --brass-soft:#2c2711; --brass-ink:#161307;
+  --chart:#4fae85; --chart-2:#29573f; --chart-hi:#d9b44a; --grid:#1a2c24;
+  --struck:#ff8a80; --struck-bg:#3a1714; --pending:#f2b65c; --pending-bg:#33240f;
+  --review:#bba9f2; --review-bg:#27203f; --clear:#7fd3a6; --clear-bg:#142d22;
+  --demo:#f0cf6a; --demo-bg:#2e2710;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.num,.kpi .v,td.num{font-variant-numeric:tabular-nums}
+
+/* App bar */
+/* Registry green with a faint ledger ruling and a brass rule underneath */
+.appbar{color:var(--ink-fg);border-bottom:3px solid var(--brass);
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px),linear-gradient(120deg,var(--ink),var(--ink-2))}
+.appbar-in{max-width:1360px;margin:0 auto;padding-inline:20px;padding-block:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand svg{flex:none}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.01em;margin:0;line-height:1.1}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--ink-muted)}
+.law{display:flex;flex-wrap:wrap;gap:6px}
+.law span{font-family:var(--f-mono);font-size:11.5px;color:var(--brass);border:1px solid color-mix(in srgb,var(--brass) 45%,transparent);border-radius:4px;padding:3px 8px;white-space:nowrap}
+
+.wrap{max-width:1360px;margin:0 auto;padding-inline:20px;padding-block:20px 40px;display:flex;flex-direction:column;gap:18px}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:14px;row-gap:2px;box-shadow:var(--shadow);min-width:0;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:linear-gradient(90deg,var(--accent),var(--brass))}
+.kpi .badge{grid-row:1/span 4;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--brass-soft);color:var(--brass-deep);align-self:start}
+.kpi .k,.kpi .v,.kpi .s,.kpi .meter{grid-column:2}
+.kpi .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .v{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1.1;letter-spacing:-.01em;color:var(--accent)}
+.kpi .s{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.kpi .meter{height:5px;border-radius:3px;background:var(--grid);overflow:hidden;margin-top:6px;display:flex}
+.kpi .meter i{display:block;height:100%}
+
+/* Main grid */
+.grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:1000px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);min-width:0}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.panel-h{background:linear-gradient(180deg,var(--sunk),var(--surface))}
+.panel-h h2{font-size:13px;margin:0;font-weight:600;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.panel-h h2::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--brass);transform:rotate(45deg)}
+.panel-h .tag{font-size:12px;color:var(--muted)}
+.panel-b{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;padding:6px 8px 0;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{font:inherit;font-weight:500;border:none;background:none;color:var(--muted);padding:11px 14px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--accent);border-bottom:3px solid var(--brass);font-weight:600}
+.tabs button:hover{color:var(--fg)}
+
+/* Controls */
+button.btn{font:inherit;font-weight:500;border-radius:6px;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);padding:8px 14px;cursor:pointer}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--brass);border-color:var(--brass);color:var(--brass-ink);font-weight:600}
+button.primary:hover{filter:brightness(1.06);color:var(--brass-ink);border-color:var(--brass)}
+button:disabled{opacity:.5;cursor:not-allowed}
+:is(button,input,select,textarea):focus-visible,label.drop:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.searchbar{display:flex;gap:8px}
+.field{flex:1;min-width:0;position:relative}
+.field svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none}
+.field input{width:100%;font:inherit;font-size:16px;padding:12px 12px 12px 40px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);color:var(--fg)}
+.hint{font-size:12px;color:var(--muted)}
+label.drop{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line-strong);border-radius:8px;padding:14px;cursor:pointer;background:var(--sunk);transition:border-color .15s}
+label.drop:hover,label.drop.over{border-color:var(--accent)}
+label.drop .ic{flex:none;width:38px;height:38px;border-radius:8px;background:var(--brass-soft);color:var(--brass-deep);display:grid;place-items:center}
+label.drop strong{display:block;color:var(--fg);font-weight:600}
+label.drop small{color:var(--muted)}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--muted)}
+.check input{margin-top:3px}
+.progress{height:4px;background:var(--grid);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .15s}
+.msg{font-size:12.5px;color:var(--muted);min-height:1.2em}
+.msg.err{color:var(--struck)}
+textarea{font:inherit;font-size:13px;width:100%;min-height:132px;padding:10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);color:var(--fg);resize:vertical}
+select{font:inherit;padding:6px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);color:var(--fg);max-width:100%}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:640px){.two{grid-template-columns:minmax(0,1fr)}}
+.sub-h{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.colmap{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;align-items:center}
+.colmap label{display:flex;gap:6px;align-items:center}
+a{color:var(--accent)}
+details{font-size:13px}
+details summary{cursor:pointer;color:var(--accent);font-weight:500}
+details ol{padding-left:18px;margin:8px 0 0;display:flex;flex-direction:column;gap:6px;color:var(--muted)}
+.banner{border-radius:6px;padding:10px 12px;font-size:12.5px}
+.banner.ask{background:var(--review-bg);color:var(--fg);border:1px solid var(--review);display:flex;flex-direction:column;gap:10px}
+.banner.ask b{color:var(--review)}
+.banner.demo{background:var(--demo-bg);color:var(--demo);border:1px dashed var(--demo)}
+.files{font-size:12px;color:var(--muted)}
+.files ul{margin:4px 0 0;padding-left:18px}
+.files li{overflow-wrap:anywhere}
+
+/* Verdict + result cards */
+.verdict{border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.verdict .vi{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface)}
+.verdict b{display:block;font-size:16px;font-family:var(--f-display);font-weight:700;letter-spacing:.01em}
+.verdict span{font-size:13px}
+.v-struck{background:var(--struck-bg);color:var(--struck)}
+.v-pending{background:var(--pending-bg);color:var(--pending)}
+.v-review{background:var(--review-bg);color:var(--review)}
+.v-clear{background:var(--clear-bg);color:var(--clear)}
+.cards{display:flex;flex-direction:column;gap:10px}
+.card{border:1px solid var(--line);border-left:3px solid var(--line-strong);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.card.c-struck{border-left-color:var(--struck)} .card.c-pending{border-left-color:var(--pending)} .card.c-clear{border-left-color:var(--clear)}
+.card-top{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:space-between;align-items:baseline}
+.card .nm{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 16px;margin:0}
+.facts div{min-width:0}
+.facts dt{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.facts dd{margin:0;font-size:13px;overflow-wrap:anywhere}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.p-struck{background:var(--struck-bg);color:var(--struck)}
+.p-pending{background:var(--pending-bg);color:var(--pending)}
+.p-review{background:var(--review-bg);color:var(--review)}
+.p-clear{background:var(--clear-bg);color:var(--clear)}
+.p-other{background:var(--sunk);color:var(--muted)}
+
+/* Bulk summary */
+.summary{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:560px){.summary{grid-template-columns:minmax(0,1fr)}}
+.donut{width:132px;height:132px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;border:1px solid var(--line);border-radius:6px;padding:8px 12px;background:var(--surface);color:var(--fg);font-size:12.5px;display:flex;flex-direction:column;align-items:flex-start;gap:0;cursor:pointer;min-width:112px}
+.chip .c{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1.1}
+.chip .l{display:flex;gap:6px;align-items:center;color:var(--muted)}
+.chip[aria-pressed=true]{border-color:var(--fg);box-shadow:inset 0 0 0 1px var(--fg)}
+.dot{width:8px;height:8px;border-radius:2px;display:inline-block}
+.tablebox{overflow:auto;border:1px solid var(--line);border-radius:6px;max-height:520px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:860px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{position:sticky;top:0;background:var(--sunk);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;z-index:1}
+tbody tr:hover td{background:var(--sunk)}
+td.num{color:var(--muted)}
+tr.r-struck td:first-child{box-shadow:inset 3px 0 0 var(--struck)}
+tr.r-pending td:first-child{box-shadow:inset 3px 0 0 var(--pending)}
+tr.r-review td:first-child{box-shadow:inset 3px 0 0 var(--review)}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+
+/* Charts */
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--f-body);font-size:11px}
+.chart .val{fill:var(--fg);font-weight:600;font-size:10.5px}
+.chart .gl{stroke:var(--grid);stroke-width:1}
+.chart .bar{fill:var(--chart-hi)}
+.chart .bar2{fill:var(--chart)}
+.chart .track{fill:var(--grid)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:flex;gap:6px;align-items:center}
+.chart-empty{font-size:12.5px;color:var(--muted);padding:6px 0}
+
+/* Sign-in gate, user box and admin panel (website build only: active when window.SOC_CONFIG is set) */
+.userbox{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-muted)}
+.userbox b{color:var(--ink-fg);font-weight:500;overflow-wrap:anywhere}
+.userbox button{font:inherit;font-size:12px;color:var(--ink-fg);background:transparent;border:1px solid color-mix(in srgb,var(--brass) 55%,transparent);border-radius:6px;padding:5px 10px;cursor:pointer}
+.userbox button:hover{border-color:var(--brass);color:var(--brass)}
+.gate{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding-inline:20px;padding-block:24px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(4px)}
+.gate-card{max-width:30rem;width:100%;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--brass);border-radius:10px;box-shadow:var(--shadow);padding:26px;display:flex;flex-direction:column;gap:12px}
+.gate-card h2{font-family:var(--f-display);font-size:24px;margin:0;color:var(--accent)}
+.gate-card p{margin:0;color:var(--muted)}
+.count{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--brass);color:var(--brass-ink);font-size:11px;font-weight:700;text-align:center}
+.req td .row{flex-wrap:nowrap}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+#visitTiles .kpi{grid-template-columns:minmax(0,1fr)}
+#visitTiles .kpi .k,#visitTiles .kpi .v,#visitTiles .kpi .s{grid-column:1}
+.btn.danger{color:var(--struck);border-color:color-mix(in srgb,var(--struck) 45%,transparent)}
+.foot{font-size:12px;color:var(--muted);max-width:100ch;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <div class="appbar-in">
+    <div class="brand">
+      <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="8" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.5"/><path d="M10 12h16M10 18h10M10 24h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 27 28 9" stroke="var(--brass)" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <div>
+        <h1>Struck-Off Company Check</h1>
+        <p>Screen vendors and customers against companies struck off by India's Registrars of Companies.</p>
+      </div>
+    </div>
+    <div class="law"><span>Companies Act, 2013 · s.248</span><span>STK-7 notices</span><span>Restoration: s.252 (NCLT)</span></div>
+    <div class="userbox" id="userBox" hidden><span>Signed in as <b id="userEmail"></b></span><button type="button" id="signOut">Sign out</button></div>
+  </div>
+</header>
+
+<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <div class="gate-card">
+    <h2 id="gateTitle">Checking your sign-in…</h2>
+    <p id="gateText">One moment.</p>
+    <div class="row" id="gateActions"></div>
+  </div>
+</div>
+<main class="wrap">
+  <section class="kpis" aria-label="Register summary">
+    <div class="kpi"><span class="badge" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="k">Companies in register</span><span class="v" id="kCount">0</span><span class="s" id="kCountS">No register loaded</span></div>
+    <div class="kpi"><span class="badge" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 10h16M9 3v4M15 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="k">Strike-off years</span><span class="v" id="kYears">–</span><span class="s" id="kYearsS">From notice and list dates</span></div>
+    <div class="kpi"><span class="badge" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.2" fill="currentColor"/></svg></span><span class="k">States &amp; UTs covered</span><span class="v" id="kStates">–</span><span class="s" id="kStatesS">Decoded from CIN</span></div>
+    <div class="kpi"><span class="badge" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="k">CIN verified</span><span class="v" id="kConf">–</span><span class="s" id="kConfS">High or medium confidence</span><div class="meter" id="kConfM" aria-hidden="true"></div></div>
+  </section>
+
+  <div class="grid">
+    <!-- Checks -->
+    <div class="col">
+      <section class="panel" aria-label="Checks">
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tabSearch" aria-selected="true" aria-controls="paneSearch">Search a company</button>
+          <button role="tab" id="tabBulk" aria-selected="false" aria-controls="paneBulk">Check a vendor / customer list</button>
+          <button role="tab" id="tabAdmin" aria-selected="false" aria-controls="paneAdmin" hidden>Access requests<span class="count" id="reqCount" hidden></span></button>
+        </div>
+
+        <div id="paneSearch" role="tabpanel" aria-labelledby="tabSearch" class="panel-b">
+          <form class="searchbar" id="searchForm">
+            <div class="field">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <input id="q" type="search" placeholder="Company name or CIN, e.g. U51909KA2014PTC012345" autocomplete="off" aria-label="Company name or CIN">
+            </div>
+            <button class="btn primary" type="submit">Check</button>
+          </form>
+          <div class="hint">Names are compared after removing “Private Limited”, “Pvt Ltd”, “Ltd”, “LLP”, “OPC”, punctuation and “&amp;”. A CIN gives a certain match.</div>
+          <div id="searchOut" class="cards" aria-live="polite"></div>
+        </div>
+
+        <div id="paneBulk" role="tabpanel" aria-labelledby="tabBulk" class="panel-b" hidden>
+          <div class="two">
+            <div class="col" style="gap:8px">
+              <h3 class="sub-h">Upload a list</h3>
+              <label class="drop" id="bulkDrop" for="bulkFile">
+                <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span><strong>Choose vendor or customer file</strong><small>CSV or Excel with a company name column. A CIN column improves accuracy.</small></span>
+                <input type="file" id="bulkFile" accept=".csv,.txt,.xlsx,.xls">
+              </label>
+              <div class="msg" id="bulkFileMsg"></div>
+            </div>
+            <div class="col" style="gap:8px">
+              <h3 class="sub-h">Or paste names</h3>
+              <textarea id="paste" aria-label="Paste company names, one per line" placeholder="One company name or CIN per line"></textarea>
+            </div>
+          </div>
+          <div class="colmap" id="colmap" hidden>
+            <label id="sheetWrap">Sheet <select id="colSheet"></select></label>
+            <label>Name column <select id="colName"></select></label>
+            <label>CIN column <select id="colCin"></select></label>
+            <span class="hint" id="rowInfo"></span>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="runBulk">Run check</button>
+            <button class="btn" id="demoList">Try the demo list</button>
+            <span class="msg" id="bulkMsg" role="status"></span>
+          </div>
+          <div class="progress" aria-hidden="true"><i id="bulkBar"></i></div>
+
+          <div id="results" class="col" hidden>
+            <div class="summary">
+              <svg class="donut" id="donut" viewBox="0 0 132 132" role="img" aria-label="Result breakdown"></svg>
+              <div class="chips" id="chips"></div>
+            </div>
+            <div class="tablebox"><table>
+              <thead><tr><th>#</th><th>Your entry</th><th>Result</th><th>Matched company (register)</th><th>CIN</th><th>RoC status</th><th>RoC</th><th>Basis</th></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table></div>
+            <div class="row">
+              <button class="btn" id="exportX">Export to Excel</button>
+              <button class="btn" id="copyT">Copy table</button>
+              <span class="msg" id="exportMsg" role="status"></span>
+            </div>
+          </div>
+        </div>
+              <div id="paneAdmin" role="tabpanel" aria-labelledby="tabAdmin" class="panel-b" hidden>
+          <h3 class="sub-h">Site visits</h3>
+          <div class="kpis" id="visitTiles"></div>
+          <div id="visitChart"></div>
+          <div class="hint" id="visitPages"></div>
+          <h3 class="sub-h">Access requests</h3>
+          <div class="row" style="justify-content:space-between">
+            <div class="chips" id="reqChips"></div>
+            <button class="btn sm" id="reqRefresh" type="button">Refresh</button>
+          </div>
+          <div class="tablebox"><table class="req">
+            <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Requested</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="reqBody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          </table></div>
+          <div class="msg" id="reqMsg" role="status"></div>
+          <h3 class="sub-h">Update the register data</h3>
+          <label class="drop" for="regUpload">
+            <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span><strong>Upload register.b64.txt</strong><small>From tool/ after running export_tool_data.py. Replaces the file every user downloads.</small></span>
+            <input type="file" id="regUpload" accept=".txt">
+          </label>
+        </div>
+</section>
+      <p class="foot">Results depend on the register you load. “Not found” means the name was not among the loaded records, not that the company is active. Name matches marked “Review” are similar names and need a CIN check. A struck-off company may be restored by the NCLT under section 252, so confirm current status on the MCA portal before acting on a result.</p>
+    </div>
+
+    <!-- Register -->
+    <div class="col">
+      <section class="panel" aria-labelledby="regh">
+        <div class="panel-h"><h2 id="regh">Reference register</h2><span class="tag" id="regTag">Demo data</span></div>
+        <div class="panel-b">
+          <div id="demoBanner" class="banner demo" hidden>Demo register: fictitious companies so you can try the tool. Load the STK-7 register workbook or MCA master data to run real checks.</div>
+          <div id="addFilesBox" class="col" style="gap:14px">
+          <label class="drop" id="regDrop" for="regFile">
+            <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            <span><strong>Add register files</strong><small>The STK-7 register is built in. Add MCA master data or other lists as CSV or Excel.</small></span>
+            <input type="file" id="regFile" accept=".csv,.txt,.xlsx,.xls" multiple>
+          </label>
+          <label class="check"><input type="checkbox" id="onlyStruck" checked><span>Keep only struck-off, under strike-off and dormant companies. Recommended for the full national file, which has over 3.5 million rows.</span></label>
+          </div>
+          <div id="regAsk" class="banner ask" hidden>
+            <span><b>Is this a vendor or customer list?</b> <span id="regAskText"></span></span>
+            <span class="row"><button class="btn primary" id="regAskCheck">Check it as a vendor list</button><button class="btn" id="regAskAdd">Add to register anyway</button></span>
+          </div>
+          <div class="progress" aria-hidden="true"><i id="regBar"></i></div>
+          <div class="msg" id="regMsg" role="status"></div>
+          <div class="files" id="regFiles"></div>
+          <div class="row"><button class="btn" id="clearReg">Clear register</button></div>
+          <details>
+            <summary>Where to get the official data</summary>
+            <ol>
+              <li><b>STK-7 register workbook</b> (this project): one sheet of struck-off companies from RoC and C-PACE notices, 2017 to 2026, with CIN confidence and source page.</li>
+              <li><b>MCA company master data</b> on the Open Government Data platform: search <a href="https://www.data.gov.in/search?title=company%20master%20data" target="_blank" rel="noopener">data.gov.in “Company Master Data”</a>. It carries CIN, name, status, RoC and registration date.</li>
+              <li>Confirm any hit on the MCA portal's View Company/LLP Master Data before you act on it.</li>
+            </ol>
+          </details>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="ch1">
+        <div class="panel-h"><h2 id="ch1">Strike-offs by year</h2><span class="tag">companies</span></div>
+        <div class="panel-b"><div id="chartYears"></div></div>
+      </section>
+
+      <section class="panel" aria-labelledby="ch2">
+        <div class="panel-h"><h2 id="ch2">Top states and UTs</h2><span class="tag" id="ch2tag">share of register</span></div>
+        <div class="panel-b"><div id="chartStates"></div></div>
+      </section>
+
+      <section class="panel" aria-labelledby="ch3" id="confPanel">
+        <div class="panel-h"><h2 id="ch3">CIN confidence</h2><span class="tag">how each CIN was read</span></div>
+        <div class="panel-b"><div id="chartConf"></div></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
+<script>window.SOC_CONFIG = {"url": "https://wzgqmzvdaoptisveztsm.supabase.co", "key": "sb_publishable_1Zs0ZklH00ES4zKkbqehdQ_JR9c8Tgk", "bucket": "register", "object": "register.b64.txt", "login": "/login/"};</script>
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const CIN_RE = /^[LU]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/;
+const LLPIN_RE = /^[A-Z]{3}-\d{4}$/;
+const LEGAL = new Set(["PRIVATE","PVT","PVTLTD","LIMITED","LTD","LLP","OPC","P","PLC","THE","PRIVATELIMITED"]);
+const WEAK = new Set(["INDIA","AND","OF","CO","COMPANY","SERVICES","SOLUTIONS","ENTERPRISES","TECHNOLOGIES","INFRA","INTERNATIONAL","TRADERS","TRADING","GROUP","INDUSTRIES","CONSULTANCY","CONSULTANTS","PROJECTS","VENTURES","EXPORTS","IMPORTS","GLOBAL","HOLDINGS","AGENCIES","AND"]);
+const FIELDS = ["cin","name","status","roc","state","date","struck","batch","conf","src","notice"];
+const fmt = n => Number(n).toLocaleString("en-IN");
+
+/* ---------- Register store ---------- */
+let R = null;          // working register = built-in rows + rows from files the viewer adds; one array per FIELDS entry
+let files = [];        // sources shown in the panel: [{name, rows, kept, note}]
+let BASE = null, baseInfo = null;   // built-in STK-7 register (register.json.gz, published with this page)
+let EXTRA = null, extraFiles = [];  // files the viewer added in this browser (kept in IndexedDB)
+let T = null;          // register that addRows writes into
+let idx = null;        // {cin:Map, exact:Map, tok:Map}
+let isDemo = false;
+
+function emptyReg(){ const r={}; for(const f of FIELDS) r[f]=[]; return r; }
+function fillReg(r){ const n=r.name.length; for(const f of FIELDS){ if(!r[f] || r[f].length!==n) r[f]=new Array(n).fill(""); } return r; }
+
+function norm(name){
+  let s = String(name||"").toUpperCase()
+    .replace(/&/g," AND ").replace(/\bM\/S\.?/g," ")
+    .replace(/\(OPC\)/g," OPC ").replace(/\./g,"").replace(/[^A-Z0-9]+/g," ").trim();
+  let t = s.split(" ").filter(Boolean);
+  while(t.length>1 && LEGAL.has(t[t.length-1])) t.pop();
+  if(t.length>1 && t[0]==="THE") t.shift();
+  t = t.filter(w=>!(LEGAL.has(w) && w!=="P"));
+  return t;
+}
+function keyOf(name){return norm(name).join(" ");}
+
+function statusClass(s){
+  const v = String(s||"").toLowerCase();
+  if(!v) return "struck";
+  if(v.includes("under process") || v==="upso" || v.includes("strike off in process")) return "pending";
+  if(v.includes("strike") || v.includes("struck") || v==="stof") return "struck";
+  if(v.includes("dormant")) return "dormant";
+  if(v.includes("active") && !v.includes("inactive")) return "active";
+  return "other";
+}
+const CLASS_LABEL = {struck:"Struck off", pending:"Strike-off in process", dormant:"Dormant (s.455)", active:"Active", other:"Other / inactive"};
+
+function buildIndex(){
+  const cin = new Map(), exact = new Map(), tok = new Map();
+  for(let i=0;i<R.name.length;i++){
+    if(R.cin[i]) cin.set(R.cin[i], i);
+    const t = norm(R.name[i]); const k = t.join(" ");
+    let e = exact.get(k); if(!e){e=[];exact.set(k,e);} e.push(i);
+    const seen = new Set();
+    for(const w of t){ if(w.length<2 || seen.has(w)) continue; seen.add(w);
+      let p = tok.get(w); if(!p){p=[];tok.set(w,p);} p.push(i); }
+  }
+  idx = {cin, exact, tok};
+}
+
+function bigrams(s){const m=new Map();const x=" "+s+" ";for(let i=0;i<x.length-1;i++){const b=x.substr(i,2);m.set(b,(m.get(b)||0)+1);}return m;}
+function dice(a,b){
+  if(a===b) return 1; if(!a||!b) return 0;
+  const A=bigrams(a), B=bigrams(b); let inter=0, na=0, nb=0;
+  for(const v of A.values()) na+=v; for(const v of B.values()) nb+=v;
+  for(const [k,v] of A){const w=B.get(k); if(w) inter+=Math.min(v,w);}
+  return 2*inter/(na+nb);
+}
+
+/* returns {kind:'cin'|'exact'|'fuzzy'|'none', ids:[], score, cands:[{i,score}]} */
+function lookup(input, cinIn){
+  if(!R || !idx) return {kind:"none", ids:[], cands:[]};
+  const raw = String(input||"").trim();
+  const cinCand = String(cinIn||"").trim().toUpperCase() || (CIN_RE.test(raw.toUpperCase())||LLPIN_RE.test(raw.toUpperCase()) ? raw.toUpperCase() : "");
+  if(cinCand){
+    const i = idx.cin.get(cinCand);
+    if(i!==undefined) return {kind:"cin", ids:[i], score:1, cands:[{i,score:1}]};
+    if(!cinIn) return {kind:"none", ids:[], cands:[], cinMiss:true};
+  }
+  const t = norm(raw); const k = t.join(" ");
+  if(!k) return {kind:"none", ids:[], cands:[]};
+  const ex = idx.exact.get(k);
+  if(ex) return {kind:"exact", ids:ex.slice(), score:1, cands:ex.map(i=>({i,score:1}))};
+  const posts = t.filter(w=>w.length>=2).map(w=>({w, p:idx.tok.get(w)||[]})).filter(x=>x.p.length);
+  if(!posts.length) return {kind:"none", ids:[], cands:[]};
+  posts.sort((a,b)=>{const wa=WEAK.has(a.w)?1:0, wb=WEAK.has(b.w)?1:0; return wa-wb || a.p.length-b.p.length;});
+  let cand;
+  if(posts[0].p.length<=15000 || posts.length===1){ cand = posts[0].p.slice(0,15000); }
+  else { const s=new Set(posts[1].p); cand = posts[0].p.filter(i=>s.has(i)).slice(0,15000); }
+  const scored=[];
+  for(const i of cand){ const sc = dice(k, keyOf(R.name[i])); if(sc>=0.72) scored.push({i,score:sc}); }
+  scored.sort((a,b)=>b.score-a.score);
+  const top = scored.slice(0,5);
+  if(!top.length) return {kind:"none", ids:[], cands:[]};
+  return {kind:"fuzzy", ids:[top[0].i], score:top[0].score, cands:top};
+}
+
+function containing(q, max){
+  const t = norm(q).filter(w=>w.length>=2); if(!t.length || !idx) return [];
+  const posts = t.map(w=>idx.tok.get(w)||[]).sort((a,b)=>a.length-b.length);
+  if(!posts[0].length) return [];
+  let cur = posts[0];
+  for(const p of posts.slice(1)){ const s=new Set(p); cur = cur.filter(i=>s.has(i)); if(!cur.length) break; }
+  return cur.slice(0, max);
+}
+function verdict(L){
+  if(L.kind==="none") return {cat:"clear", label:"Not found in register"};
+  const i = L.ids[0]; const sc = statusClass(R.status[i]);
+  if(L.kind==="fuzzy" && L.score<0.9) return {cat:"review", label:"Review: similar name", sc};
+  if(sc==="struck") return {cat:"struck", label:"Struck off", sc};
+  if(sc==="pending") return {cat:"pending", label:"Strike-off in process", sc};
+  if(sc==="dormant") return {cat:"pending", label:"Dormant", sc};
+  if(sc==="active") return {cat:"clear", label:"Active", sc};
+  return {cat:"review", label:CLASS_LABEL.other, sc};
+}
+function basis(L){
+  if(L.kind==="cin") return "CIN match";
+  if(L.kind==="exact") return L.ids.length>1 ? `Exact name (${L.ids.length} records)` : "Exact name";
+  if(L.kind==="fuzzy") return `Similar name ${Math.round(L.score*100)}%`;
+  if(L.cinMiss) return "CIN not in register";
+  return "—";
+}
+
+/* ---------- Register loading ---------- */
+const pick = (headers, tests) => { for(const t of tests){ const i = headers.findIndex(h=>t.test(h)); if(i>=0) return i; } return -1; };
+function mapCols(headers){
+  const h = headers.map(x=>String(x||"").trim().toLowerCase().replace(/[_\s]+/g," "));
+  return {
+    cin: pick(h,[/^(corporate identification number|cin|cin\/llpin|llpin|cin no\.?|cin number)$/, /corporate identification/, /\bcin\b(?! confidence)/, /llpin/]),
+    name: pick(h,[/^company name$/, /^name of (the )?company$/, /company name/, /^(llp name|name)$/, /name/]),
+    status: pick(h,[/company status/, /^status$/, /status/]),
+    roc: pick(h,[/registrar of companies/, /^roc( code)?$/, /registrar/, /\broc\b(?! basis)/]),
+    state: pick(h,[/registered state/, /^state$/, /^state \/ ut$/, /^state(?! code)/, /state(?! code)/]),
+    date: pick(h,[/date of registration/, /date of incorporation/, /registration date/, /incorporation/]),
+    struck: pick(h,[/date struck off/, /struck off (on|date)/, /date of strik/]),
+    batch: pick(h,[/^batch$/]),
+    conf: pick(h,[/^cin confidence$/]),
+    src: pick(h,[/^source file$/]),
+    notice: pick(h,[/stk-7 notice no/, /^notice no/])
+  };
+}
+function headerRowIndex(rows, strongOnly){
+  for(let r=0;r<Math.min(rows.length,40);r++){
+    const row = rows[r]||[]; const m = mapCols(row);
+    const short = i => i < 0 || String(row[i]||"").length <= 40;
+    if(m.name>=0 && (m.cin>=0 || m.status>=0) && m.cin!==m.name && short(m.name) && short(m.cin)) return r;
+  }
+  if(strongOnly) return -1;
+  for(let r=0;r<Math.min(rows.length,40);r++){ if(mapCols(rows[r]||[]).name>=0) return r; }
+  return -1;
+}
+
+function addRows(rows, m, keepFilter){
+  let kept=0;
+  const cell = (row,i) => i>=0 ? String(row[i]??"").trim() : "";
+  for(const row of rows){
+    const cinCell = cell(row,m.cin);
+    const name = cell(row,m.name) || (cinCell ? "(name not read)" : "");
+    if(!name) continue;
+    const status = m.status>=0 ? cell(row,m.status) : "Strike Off (per notice list)";
+    if(keepFilter){ const c = statusClass(status); if(c==="active"||c==="other") continue; }
+    T.cin.push(cinCell.toUpperCase()); T.name.push(name); T.status.push(status);
+    T.roc.push(cell(row,m.roc)); T.state.push(cell(row,m.state)); T.date.push(cell(row,m.date));
+    T.struck.push(cell(row,m.struck)); T.batch.push(cell(row,m.batch)); T.conf.push(cell(row,m.conf));
+    T.src.push(cell(row,m.src)); T.notice.push(cell(row,m.notice));
+    kept++;
+  }
+  return kept;
+}
+
+function setRegProgress(p, text, err){ $("regBar").style.width = (p*100).toFixed(1)+"%"; $("regMsg").textContent = text||""; $("regMsg").classList.toggle("err", !!err); }
+
+function loadCsv(file, keep){
+  return new Promise((resolve,reject)=>{
+    let m=null, total=0, kept=0, hdrBuf=[];
+    Papa.parse(file,{
+      header:false, skipEmptyLines:true, chunkSize:1024*1024*4,
+      chunk(res){
+        let rows = res.data;
+        if(!m){
+          hdrBuf = hdrBuf.concat(rows);
+          const hi = headerRowIndex(hdrBuf);
+          if(hi<0){ if(hdrBuf.length>40){ reject(new Error("No company name column found in "+file.name+".")); this && this.abort && this.abort(); } return; }
+          m = mapCols(hdrBuf[hi]); rows = hdrBuf.slice(hi+1); hdrBuf=null;
+        }
+        total += rows.length; kept += addRows(rows, m, keep);
+        const p = res.meta && res.meta.cursor ? res.meta.cursor/file.size : 0;
+        setRegProgress(Math.min(p,1), `Reading ${file.name}: ${fmt(total)} rows`);
+      },
+      complete(){ if(!m && hdrBuf){ const hi=headerRowIndex(hdrBuf); if(hi<0) return reject(new Error("No company name column found in "+file.name+".")); m=mapCols(hdrBuf[hi]); const rows=hdrBuf.slice(hi+1); total+=rows.length; kept+=addRows(rows,m,keep);} resolve({total,kept,hasStatus:m.status>=0,strikeCols:m.struck>=0||m.notice>=0}); },
+      error(e){ reject(e); }
+    });
+  });
+}
+async function loadXlsx(file, keep){
+  setRegProgress(.2, `Reading ${file.name}`);
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf,{type:"array"});
+  const sheets = wb.SheetNames.map(sn => XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1, raw:false, defval:""}));
+  let strong = sheets.map(rows => headerRowIndex(rows, true));
+  const useStrong = strong.some(i => i >= 0);
+  let total=0, kept=0, any=false, hasStatus=false, strikeCols=false;
+  sheets.forEach((rows, k) => {
+    const hi = useStrong ? strong[k] : headerRowIndex(rows, false);
+    if(hi<0) return;
+    any=true; const m = mapCols(rows[hi]); hasStatus = hasStatus || m.status>=0; strikeCols = strikeCols || m.struck>=0 || m.notice>=0;
+    const body = rows.slice(hi+1); total += body.length; kept += addRows(body,m,keep);
+  });
+  if(!any) throw new Error("No company name column found in "+file.name+".");
+  return {total,kept,hasStatus,strikeCols};
+}
+
+/* Each added file is read into its own register first. A file with no status, strike-off date or notice column is
+   most likely a vendor list dropped in the wrong box: treating it as a register would flag every vendor as struck off,
+   so ask before adding it. */
+let pendingReg = null;   // {file, reg, info}
+async function loadRegisterFiles(list){
+  if(!list || !list.length) return;
+  $("regAsk").hidden = true; pendingReg = null;
+  const keep = $("onlyStruck").checked;
+  let added = 0;
+  for(const f of list){
+    if(BASE && /^STK-7_Struck_Off_Companies/i.test(f.name)){ setRegProgress(0, `${f.name} is already built in. Add other files, such as MCA master data.`); continue; }
+    try{
+      T = emptyReg();
+      const ext = f.name.toLowerCase().split(".").pop();
+      const res = (ext==="xlsx"||ext==="xls") ? await loadXlsx(f,keep) : await loadCsv(f,keep);
+      const info = {name:f.name, rows:res.total, kept:res.kept, note: res.hasStatus ? "" : "no status column, treated as struck off"};
+      if(!res.hasStatus && !res.strikeCols){
+        pendingReg = {file:f, reg:T, info};
+        $("regAskText").textContent = `${f.name} has no status, strike-off date or STK-7 notice column. Adding it would mark all ${fmt(res.kept)} companies in it as struck off.`;
+        $("regAsk").hidden = false; setRegProgress(0, "");
+        continue;
+      }
+      mergeExtra(T, info); added++;
+    }catch(e){ setRegProgress(0, e.message||String(e), true); }
+  }
+  if(added) await finishAdd();
+}
+function mergeExtra(reg, info){
+  if(!EXTRA) EXTRA = emptyReg();
+  for(const f of FIELDS) EXTRA[f] = EXTRA[f].concat(reg[f]);
+  extraFiles.push(info);
+}
+async function finishAdd(){
+  setRegProgress(1, "Building search index…");
+  await new Promise(r=>setTimeout(r,20));
+  compose();
+  setRegProgress(0, `Register ready: ${fmt(R.name.length)} companies.`);
+  saveCache();
+}
+
+/* Working register = built-in + added files. Falls back to the demo when neither is there. */
+function compose(){
+  const parts = [BASE, EXTRA].filter(x=>x && x.name.length);
+  if(!parts.length){ loadDemo(); return; }
+  isDemo = false;
+  R = parts.length===1 ? parts[0] : (()=>{ const r=emptyReg(); for(const p of parts) for(const f of FIELDS) r[f]=r[f].concat(p[f]); return r; })();
+  files = (BASE ? [baseInfo] : []).concat(extraFiles);
+  buildIndex(); renderRegister();
+}
+
+/* Built-in register: published next to the page as gzip-compressed JSON (columns + lookup lists), base64 in a .txt file. */
+async function loadBuiltin(){
+  setRegProgress(.15, "Loading the STK-7 register…");
+  let b64;
+  if(sb){   // website: private bucket, readable only by approved users
+    const {data, error} = await sb.storage.from(CFG.bucket).download(CFG.object);
+    if(error) throw error;
+    b64 = (await data.text()).trim();
+  } else {
+    const res = await fetch("register.b64.txt");
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    b64 = (await res.text()).trim();
+  }
+  let buf = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+  if(buf[0]===0x1f && buf[1]===0x8b){
+    setRegProgress(.45, "Unpacking the register…");
+    buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+  }
+  setRegProgress(.7, "Reading 2 lakh+ companies…");
+  const d = JSON.parse(new TextDecoder().decode(buf));
+  const n = d.rows, c = d.cols, D = d.dicts, r = emptyReg();
+  const un = (col, key) => { const L=D[key]; return c[col].map(i=>L[i]); };
+  r.cin=c.cin; r.name=c.name; r.struck=c.struck; r.date=c.inc;
+  r.state=un("state","state"); r.roc=un("roc","roc"); r.notice=un("notice","notice"); r.batch=un("batch","batch"); r.conf=un("conf","conf"); r.src=un("src","src");
+  r.status=new Array(n).fill("Strike Off (per notice list)");
+  BASE = r;
+  baseInfo = {name:`STK-7 register, 2017–2026 (built in, updated ${d.built})`, rows:n, kept:n, note:""};
+}
+
+/* ---------- Register stats + charts ---------- */
+const STATE_CODES = {AP:"Andhra Pradesh",AR:"Arunachal Pradesh",AS:"Assam",BR:"Bihar",CT:"Chhattisgarh",CH:"Chandigarh",DL:"Delhi",DN:"Dadra and Nagar Haveli",DD:"Daman and Diu",GA:"Goa",GJ:"Gujarat",HR:"Haryana",HP:"Himachal Pradesh",JK:"Jammu and Kashmir",JH:"Jharkhand",KA:"Karnataka",KL:"Kerala",LD:"Lakshadweep",MP:"Madhya Pradesh",MH:"Maharashtra",MN:"Manipur",ML:"Meghalaya",MZ:"Mizoram",NL:"Nagaland",OR:"Odisha",PB:"Punjab",PY:"Puducherry",RJ:"Rajasthan",SK:"Sikkim",TN:"Tamil Nadu",TR:"Tripura",TG:"Telangana",UP:"Uttar Pradesh",UR:"Uttarakhand",UT:"Uttarakhand",WB:"West Bengal",AN:"Andaman and Nicobar Islands",TZ:"Tamil Nadu",PN:"Maharashtra"};
+function yearOf(i){
+  const d = R.struck[i]; let m = d && d.match(/(19|20)\d{2}/); if(m) return +m[0];
+  m = R.batch[i] && R.batch[i].match(/(19|20)\d{2}/); return m ? +m[0] : null;
+}
+function stateOf(i){
+  if(R.state[i]) return R.state[i];
+  const c=R.cin[i]; return CIN_RE.test(c) ? (STATE_CODES[c.slice(6,8)]||"") : "";
+}
+function confClass(s){ const v=String(s||"").toLowerCase(); if(!v) return ""; if(v.startsWith("high")) return "high"; if(v.startsWith("medium")) return "medium"; if(v.startsWith("low")) return "low"; return "other"; }
+function stats(){
+  const n=R.name.length, years=new Map(), states=new Map(), conf={high:0,medium:0,low:0,other:0}; let confN=0;
+  for(let i=0;i<n;i++){
+    const y=yearOf(i); if(y) years.set(y,(years.get(y)||0)+1);
+    const s=stateOf(i); if(s) states.set(s,(states.get(s)||0)+1);
+    const c=confClass(R.conf[i]); if(c){ conf[c]++; confN++; }
+  }
+  return {n, years, states, conf, confN};
+}
+
+const NS="http://www.w3.org/2000/svg";
+function svgEl(tag, attrs, text){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; return e; }
+function niceMax(v){ if(v<=0) return 4; if(v<=20) return Math.ceil(v/4)*4;   // small counts: whole-number ticks
+  const p=Math.pow(10,Math.floor(Math.log10(v))); for(const m of [1,2,2.5,5,10]) if(m*p>=v) return m*p; return 10*p; }
+function shortN(v){ return v>=1e5 ? (v/1e5).toFixed(v>=1e6?0:1).replace(/\.0$/,"")+"L" : v>=1e3 ? (v/1e3).toFixed(v>=1e4?0:1).replace(/\.0$/,"")+"k" : String(v); }
+
+function drawYears(st){
+  const box=$("chartYears"); box.textContent="";
+  const ys=[...st.years.keys()].sort((a,b)=>a-b);
+  if(!ys.length){ box.innerHTML='<p class="chart-empty">The loaded register has no strike-off dates.</p>'; return; }
+  const all=[]; for(let y=ys[0]; y<=ys[ys.length-1]; y++) all.push([y, st.years.get(y)||0]);
+  const W=520,H=210,L=40,Rr=8,T=18,B=26, max=niceMax(Math.max(...all.map(d=>d[1])));
+  const s=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":"Companies struck off per year"});
+  for(let k=0;k<=4;k++){ const v=max*k/4, y=T+(H-T-B)*(1-k/4);
+    s.append(svgEl("line",{x1:L,x2:W-Rr,y1:y,y2:y,class:"gl"})); s.append(svgEl("text",{x:L-6,y:y+4,"text-anchor":"end"},shortN(v))); }
+  const bw=(W-L-Rr)/all.length, peak=Math.max(...all.map(d=>d[1]));
+  all.forEach(([y,v],k)=>{ const h=(H-T-B)*v/max, x=L+k*bw+bw*.18, w=bw*.64;
+    const r=svgEl("rect",{x, y:H-B-h, width:w, height:Math.max(h,v?1:0), rx:2, class: v===peak?"bar":"bar2"}); r.append(svgEl("title",{},`${y}: ${fmt(v)} companies`)); s.append(r);
+    if(all.length<=14 || k%2===0) s.append(svgEl("text",{x:x+w/2,y:H-B+15,"text-anchor":"middle"},String(y)));
+    if(v && (all.length<=12 || v===peak)) s.append(svgEl("text",{x:x+w/2,y:H-B-h-4,"text-anchor":"middle",class:"val"},shortN(v)));
+  });
+  box.append(s);
+}
+function drawStates(st){
+  const box=$("chartStates"); box.textContent="";
+  const top=[...st.states.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!top.length){ box.innerHTML='<p class="chart-empty">No state information in the loaded register.</p>'; return; }
+  $("ch2tag").textContent = `${st.states.size} states and UTs`;
+  const W=520,row=26,H=top.length*row+4,L=150,Rr=56, max=top[0][1];
+  const s=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":"Companies by state, top 8"});
+  top.forEach(([name,v],k)=>{ const y=k*row+2, w=(W-L-Rr)*v/max;
+    s.append(svgEl("text",{x:L-8,y:y+15,"text-anchor":"end"}, name.length>20? name.slice(0,19)+"…" : name));
+    s.append(svgEl("rect",{x:L,y:y+5,width:W-L-Rr,height:14,rx:3,class:"track"}));
+    const r=svgEl("rect",{x:L,y:y+5,width:Math.max(w,2),height:14,rx:3,class:k===0?"bar":"bar2"}); r.append(svgEl("title",{},`${name}: ${fmt(v)}`)); s.append(r);
+    s.append(svgEl("text",{x:W-Rr+6,y:y+16,class:"val"}, `${(100*v/st.n).toFixed(1)}%`));
+  });
+  box.append(s);
+}
+const CONF_COL = {high:"var(--accent)", medium:"var(--chart-2)", low:"var(--brass)", other:"var(--faint)"};
+const CONF_LAB = {high:"High · text PDF", medium:"Medium · OCR, two reads agree", low:"Low · verify against source", other:"Other"};
+function drawConf(st){
+  const box=$("chartConf"); box.textContent="";
+  $("confPanel").hidden = !st.confN;
+  if(!st.confN) return;
+  const W=520,H=26; let x=0;
+  const s=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":"CIN confidence breakdown"});
+  for(const k of ["high","medium","low","other"]){ const v=st.conf[k]; if(!v) continue; const w=W*v/st.confN;
+    const r=svgEl("rect",{x,y:0,width:w,height:H,fill:CONF_COL[k]}); r.append(svgEl("title",{},`${CONF_LAB[k]}: ${fmt(v)}`)); s.append(r); x+=w; }
+  box.append(s);
+  const lg=document.createElement("div"); lg.className="legend"; lg.style.marginTop="10px";
+  lg.innerHTML = ["high","medium","low","other"].filter(k=>st.conf[k]).map(k=>`<span><i class="dot" style="background:${CONF_COL[k]}"></i>${CONF_LAB[k]} <b class="num">${fmt(st.conf[k])}</b></span>`).join("");
+  box.append(lg);
+}
+
+function renderRegister(){
+  const n = R ? R.name.length : 0;
+  $("demoBanner").hidden = !isDemo;
+  $("regTag").textContent = isDemo ? "Demo data" : n ? `${fmt(n)} companies` : "Empty";
+  $("clearReg").textContent = BASE ? "Remove added files" : "Clear register";
+  $("clearReg").hidden = (!!BASE && !extraFiles.length) || !!CFG;
+  $("regFiles").innerHTML = files.length ? `<span>Sources</span><ul>${files.map(f=>`<li>${esc(f.name)}: ${fmt(f.kept)} kept of ${fmt(f.rows)}${f.note?` (${esc(f.note)})`:""}</li>`).join("")}</ul>` : "";
+  const st = R ? stats() : {n:0,years:new Map(),states:new Map(),conf:{},confN:0};
+  $("kCount").textContent = fmt(n);
+  $("kCountS").textContent = isDemo ? "Demo companies (fictitious)" : BASE ? (extraFiles.length ? `STK-7 register + ${extraFiles.length} added file${extraFiles.length>1?"s":""}` : "STK-7 notices, built in") : files.length ? `From ${files.length} file${files.length>1?"s":""}` : "No register loaded";
+  $("demoList").hidden = !isDemo;
+  const ys=[...st.years.keys()].sort((a,b)=>a-b);
+  $("kYears").textContent = ys.length ? (ys[0]===ys[ys.length-1] ? ys[0] : `${ys[0]}–${String(ys[ys.length-1]).slice(2)}`) : "–";
+  $("kYearsS").textContent = ys.length ? `Peak ${[...st.years.entries()].sort((a,b)=>b[1]-a[1])[0][0]}` : "No strike-off dates in register";
+  $("kStates").textContent = st.states.size || "–";
+  $("kStatesS").textContent = st.states.size ? `Largest: ${[...st.states.entries()].sort((a,b)=>b[1]-a[1])[0][0]}` : "No state data";
+  if(st.confN){
+    const ok=st.conf.high+st.conf.medium;
+    $("kConf").textContent = (100*ok/st.confN).toFixed(1)+"%";
+    $("kConfS").textContent = `${fmt(st.conf.low)} CINs to verify at source`;
+    $("kConfM").innerHTML = ["high","medium","low","other"].map(k=>st.conf[k]?`<i style="width:${100*st.conf[k]/st.confN}%;background:${CONF_COL[k]}"></i>`:"").join("");
+  } else { $("kConf").textContent="–"; $("kConfS").textContent="Register has no confidence grades"; $("kConfM").innerHTML=""; }
+  drawYears(st); drawStates(st); drawConf(st);
+}
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ---------- Cache (per browser, best effort) ---------- */
+function idb(){ return new Promise((res,rej)=>{ try{ const q=indexedDB.open("struckoff-check",1); q.onupgradeneeded=()=>q.result.createObjectStore("kv"); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error);}catch(e){rej(e);} }); }
+async function saveCache(){ try{ const db=await idb(); const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put({E:EXTRA,files:extraFiles,at:Date.now()},"extra"); tx.objectStore("kv").delete("reg"); }catch(e){} }
+async function loadCache(){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("kv").objectStore("kv").get("extra"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function clearCache(){ try{ const db=await idb(); const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").delete("extra"); tx.objectStore("kv").delete("reg"); }catch(e){} }
+
+/* ---------- Demo data (fictitious) ---------- */
+const DEMO = [
+  ["U00000DM2015PTC000101","Demo Saffron Textiles Private Limited","Strike Off","RoC Mumbai","Maharashtra","2015","12-03-2022","High (text PDF)"],
+  ["U00000DM2016PTC000102","Demo Bluewater Logistics Pvt Ltd","Strike Off","RoC Chennai","Tamil Nadu","2016","05-07-2023","High (text PDF)"],
+  ["U00000DM2014PTC000103","Demo Kaveri Agro Foods Private Limited","Under Process of Striking Off","RoC Bangalore","Karnataka","2014","","Medium (OCR, two reads agree)"],
+  ["U00000DM2017PTC000104","Demo Sunrise Infra Projects Private Limited","Strike Off","RoC Delhi","Delhi","2017","30-09-2024","High (text PDF)"],
+  ["U00000DM2012PTC000105","Demo Malabar Spice Exports Private Limited","Dormant under section 455","RoC Ernakulam","Kerala","2012","","Medium (OCR, two reads agree)"],
+  ["U00000DM2018PTC000106","Demo Greenleaf Software Solutions Private Limited","Strike Off","RoC Hyderabad","Telangana","2018","08-08-2024","High (text PDF)"],
+  ["U00000DM2019OPC000107","Demo Arjun Trading (OPC) Private Limited","Strike Off","RoC Delhi","Delhi","2019","19-11-2025","Low (OCR, verify)"],
+  ["U00000DM2011PLC000108","Demo Coastal Finance Limited","Strike Off","RoC Mumbai","Maharashtra","2011","03-06-2024","High (text PDF)"],
+  ["U00000DM2013PTC000109","Demo Northstar Engineering Works Private Limited","Active","RoC Pune","Maharashtra","2013","","High (text PDF)"],
+  ["U00000DM2020PTC000110","Demo Lotus Healthcare Services Private Limited","Strike Off","RoC Kolkata","West Bengal","2020","11-12-2026","High (text PDF)"]
+];
+const DEMO_LIST = "Demo Saffron Textiles Pvt. Ltd.\nDEMO BLUEWATER LOGISTICS PRIVATE LIMITED\nU00000DM2014PTC000103\nDemo Sunrise Infra Project Pvt Ltd\nDemo Malabar Spice Exports Pvt Ltd\nDemo Green Leaf Software Solutions Pvt Ltd\nDemo Northstar Engineering Works Pvt Ltd\nDemo Riverbank Paper Mills Ltd\nDemo Lotus Health Care Services Private Limited\nDemo Coastal Finance Ltd.";
+function loadDemo(){
+  R = emptyReg(); isDemo=true; files=[];
+  for(const r of DEMO){ R.cin.push(r[0]); R.name.push(r[1]); R.status.push(r[2]); R.roc.push(r[3]); R.state.push(r[4]); R.date.push(r[5]);
+    R.struck.push(r[6]); R.batch.push(""); R.conf.push(r[7]); R.src.push("Demo notice.pdf"); R.notice.push(""); }
+  buildIndex(); renderRegister();
+}
+
+/* ---------- Single search ---------- */
+const V_ICON = {
+  struck:'<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  pending:'<svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 8v4l3 2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  review:'<svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  clear:'<svg width="18" height="18" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+function fact(label, value, mono){ return value ? `<div><dt>${label}</dt><dd${mono?' class="mono"':""}>${esc(value)}</dd></div>` : ""; }
+function renderSearch(){
+  const q = $("q").value.trim(); const out = $("searchOut");
+  if(!q){ out.innerHTML=""; return; }
+  if(!R || !R.name.length){ out.innerHTML = `<div class="verdict v-review"><span class="vi">${V_ICON.review}</span><div><b>No register loaded</b><span>Load the register file on the right first.</span></div></div>`; return; }
+  const L = lookup(q); let v = verdict(L);
+  const sug = (L.kind==="none" && !L.cinMiss) ? containing(q, 5) : [];   // partial name: register names containing every word typed
+  if(sug.length){
+    out.innerHTML = `<div class="verdict v-review"><span class="vi">${V_ICON.review}</span><div><b>Review: possible matches</b><span>No exact match. ${sug.length===1?"This register name contains":"These register names contain"} all your words. Confirm with the CIN before relying on one.</span></div></div>` + sug.map(i=>card(i,null,false)).join("");
+    return;
+  }
+  let html = `<div class="verdict v-${v.cat}"><span class="vi">${V_ICON[v.cat]}</span><div><b>${esc(v.label)}</b><span>${L.kind==="none" ? (L.cinMiss ? "No company with this CIN in the register." : "No company with this name in the register.") + (isDemo ? "" : " It holds struck-off and dormant companies only.") : esc(basis(L))}</span></div></div>`;
+  const list = L.kind==="exact" ? L.ids.map(i=>({i,score:1})) : L.cands;
+  html += list.map(c=>card(c.i, c.score, L.kind==="fuzzy")).join("");
+  out.innerHTML = html;
+}
+function card(i, score, showSim){
+    const sc=statusClass(R.status[i]);
+    const pc = sc==="struck"?"struck":(sc==="pending"||sc==="dormant")?"pending":sc==="active"?"clear":"other";
+    const cc = confClass(R.conf[i]); const cpill = cc ? `<span class="pill ${cc==="high"?"p-clear":cc==="low"?"p-pending":"p-other"}">CIN ${esc(cc)}</span>` : "";
+    return `<article class="card c-${pc}"><div class="card-top"><span class="nm">${esc(R.name[i])}</span><span class="row" style="gap:6px">${cpill}<span class="pill p-${pc}">${esc(R.status[i]||CLASS_LABEL[sc])}</span></span></div>
+      <dl class="facts">${fact("CIN",R.cin[i]||"No CIN",true)}${fact("Struck off",R.struck[i])}${fact("RoC",R.roc[i])}${fact("State / UT",stateOf(i))}${fact("Incorporated",R.date[i])}${fact("STK-7 notice",R.notice[i],true)}${fact("Source",R.src[i])}${showSim&&score!=null?fact("Name similarity",Math.round(score*100)+"%"):""}</dl></article>`;
+}
+
+/* ---------- Bulk ---------- */
+let bulkRows=null, bulkHeaders=null, results=[], filter="all";
+/* Vendor / customer files come from Tally, SAP and hand-made sheets: the name header may say "Particulars", "Party",
+   "Ledger" or "Supplier", sit under title rows, or be on a later sheet. Pick the sheet, header row and name column
+   that actually hold company names; the viewer can override each choice. */
+const NAME_HDR = /(vendor|customer|party|supplier|debtor|creditor|company|ledger|particulars|account|payee|client|beneficiary|entity)\s*(name)?|^name( of .*)?$|\bname\b/i;
+const CO_RE = /\b(LIMITED|LTD|PVT|PRIVATE|LLP|CORPORATION|CORP|INC|COMPANY|CO\.?|INDUSTRIES|ENTERPRISES|TRADERS)\b\.?\s*$/i;
+let bulkBook = null, bulkFileName = "";
+function nameLike(v){ v=String(v??"").trim(); return v.length>=4 && /[A-Za-z]{3}/.test(v) && !/^\d[\d,.\s-]*$/.test(v); }
+function analyseSheet(rows){
+  // header row: the row (in the first 30) with the most header-like cells, preferring one with a name-type header
+  let hi=-1, best=-1;
+  for(let r=0;r<Math.min(rows.length,30);r++){
+    const cells=(rows[r]||[]).map(c=>String(c??"").trim()); const filled=cells.filter(Boolean);
+    if(filled.length<2) continue;
+    const short=filled.filter(c=>c.length<=40 && !/^\d[\d,.\s/-]*$/.test(c)).length;
+    const sc = short + (cells.some(c=>NAME_HDR.test(c))?5:0) + (mapCols(cells).cin>=0?2:0);
+    if(sc>best){ best=sc; hi=r; }
+  }
+  if(hi<0) hi=0;
+  const headers=(rows[hi]||[]).map((h,i)=>String(h??"").trim()||`Column ${i+1}`);
+  const body=rows.slice(hi+1).filter(r=>r && r.some(c=>String(c??"").trim()));
+  const width=Math.max(headers.length, ...body.slice(0,200).map(r=>r.length));
+  while(headers.length<width) headers.push(`Column ${headers.length+1}`);
+  // name column: header keyword first, then the column whose values look most like company names
+  const sample=body.slice(0,300), co=new Array(width).fill(0), txt=new Array(width).fill(0);
+  for(const r of sample) for(let i=0;i<width;i++){ const v=r[i]; if(nameLike(v)){ txt[i]++; if(CO_RE.test(String(v).trim())) co[i]++; } }
+  const m=mapCols(headers);
+  let nameCol = headers.findIndex(h=>/(vendor|customer|party|supplier|debtor|creditor|payee|client)/i.test(h) && /name/i.test(h));
+  if(nameCol<0) nameCol = headers.findIndex((h,i)=>NAME_HDR.test(h) && txt[i]>=sample.length*0.5);
+  const byContent = co.indexOf(Math.max(...co));
+  if(nameCol<0 || (co[byContent]>=3 && co[nameCol]<co[byContent]*0.3)) nameCol = co[byContent]>0 ? byContent : txt.indexOf(Math.max(...txt));
+  let cinCol = m.cin;
+  if(cinCol<0){ const hits=new Array(width).fill(0); for(const r of sample) for(let i=0;i<width;i++) if(CIN_RE.test(String(r[i]??"").trim().toUpperCase())) hits[i]++; const k=hits.indexOf(Math.max(...hits)); if(hits[k]>0) cinCol=k; }
+  return {hi, headers, body, nameCol, cinCol, score: Math.max(...co)*3 + Math.max(...txt)};
+}
+function showBulkSheet(k){
+  const sh = bulkBook[k]; const a = sh.a;
+  bulkHeaders = a.headers; bulkRows = a.body;
+  const opts = bulkHeaders.map((h,i)=>`<option value="${i}">${esc(h)}</option>`).join("");
+  $("colName").innerHTML = opts; $("colName").value = String(Math.max(0,a.nameCol));
+  $("colCin").innerHTML = `<option value="-1">None</option>`+opts; $("colCin").value = String(a.cinCol);
+  $("colmap").hidden=false; previewBulk();
+  $("bulkFileMsg").textContent = `Loaded ${bulkFileName}${bulkBook.length>1?`, sheet “${sh.name}”`:""}. Check the column choices, then run.`;
+}
+function previewBulk(){
+  const nc=+$("colName").value; const ex = bulkRows.map(r=>String(r[nc]??"").trim()).filter(Boolean);
+  $("rowInfo").textContent = `${fmt(ex.length)} names found` + (ex.length ? `, e.g. ${ex.slice(0,2).map(x=>x.length>34?x.slice(0,33)+"…":x).join("; ")}` : ". Pick the column that holds company names.");
+}
+async function readBulkFile(f){
+  const ext = f.name.toLowerCase().split(".").pop();
+  bulkFileName = f.name;
+  let sheets;
+  if(ext==="xlsx"||ext==="xls"){ const wb=XLSX.read(await f.arrayBuffer(),{type:"array"}); sheets = wb.SheetNames.map(n=>({name:n, rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:""})})); }
+  else sheets = [{name:f.name, rows: await new Promise((res,rej)=>Papa.parse(f,{header:false,skipEmptyLines:true,complete:r=>res(r.data),error:rej}))}];
+  bulkBook = sheets.filter(s=>s.rows.length).map(s=>({name:s.name, a:analyseSheet(s.rows)}));
+  if(!bulkBook.length) throw new Error("the file has no rows");
+  let k=0; bulkBook.forEach((s,i)=>{ if(s.a.score>bulkBook[k].a.score) k=i; });
+  $("colSheet").innerHTML = bulkBook.map((s,i)=>`<option value="${i}">${esc(s.name)}</option>`).join(""); $("colSheet").value=String(k);
+  $("sheetWrap").hidden = bulkBook.length<2;
+  showBulkSheet(k);
+  $("paste").value="";
+}
+
+async function runBulk(){
+  if(!R || !R.name.length){ $("bulkMsg").textContent="Load a register first."; return; }
+  let items=[];
+  const pasted = $("paste").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  if(pasted.length) items = pasted.map(s=>({name:s, cin:""}));
+  else if(bulkRows){ const nc=+$("colName").value, cc=+$("colCin").value; items = bulkRows.map(r=>({name:String(r[nc]??"").trim(), cin: cc>=0?String(r[cc]??"").trim():""})).filter(x=>x.name||x.cin); }
+  if(!items.length){ $("bulkMsg").textContent="Upload a file or paste names first."; return; }
+  $("runBulk").disabled=true; results=[];
+  const t0=performance.now();
+  for(let s=0;s<items.length;s+=300){
+    for(const it of items.slice(s,s+300)){ const L=lookup(it.name, it.cin); results.push({it,L,v:verdict(L)}); }
+    $("bulkBar").style.width=(Math.min(1,(s+300)/items.length)*100)+"%";
+    $("bulkMsg").textContent=`Checked ${fmt(Math.min(items.length,s+300))} of ${fmt(items.length)}`;
+    await new Promise(r=>setTimeout(r,0));
+  }
+  $("runBulk").disabled=false; filter="all";
+  $("bulkMsg").textContent=`Done: ${fmt(items.length)} entries in ${((performance.now()-t0)/1000).toFixed(1)} s.`;
+  setTimeout(()=>{$("bulkBar").style.width="0";},600);
+  renderResults();
+}
+
+const CHIP = [["all","All entries","var(--faint)"],["struck","Struck off","var(--struck)"],["pending","In process / dormant","var(--pending)"],["review","Review","var(--review)"],["clear","Not found / active","var(--clear)"]];
+function drawDonut(c){
+  const s=$("donut"); s.textContent="";
+  const cx=66, cy=66, r=50, sw=18, C=2*Math.PI*r; let off=0;
+  s.append(svgEl("circle",{cx,cy,r,fill:"none",stroke:"var(--grid)","stroke-width":sw}));
+  for(const [k,,col] of CHIP.slice(1)){ const v=c[k]; if(!v) continue; const len=C*v/c.all;
+    const a=svgEl("circle",{cx,cy,r,fill:"none",stroke:col,"stroke-width":sw,"stroke-dasharray":`${len} ${C-len}`,"stroke-dashoffset":-off,transform:`rotate(-90 ${cx} ${cy})`});
+    a.append(svgEl("title",{},`${k}: ${v}`)); s.append(a); off+=len; }
+  const hit=c.struck+c.pending;
+  s.append(svgEl("text",{x:cx,y:cy-2,"text-anchor":"middle",fill:"var(--fg)","font-family":"var(--f-display)","font-weight":"700","font-size":"24"}, fmt(hit)));
+  s.append(svgEl("text",{x:cx,y:cy+16,"text-anchor":"middle",fill:"var(--muted)","font-size":"10.5"}, "flagged"));
+}
+function renderResults(){
+  $("results").hidden=false;
+  const c={all:results.length,struck:0,pending:0,review:0,clear:0}; results.forEach(r=>c[r.v.cat]++);
+  drawDonut(c);
+  $("chips").innerHTML = CHIP.map(([k,l,col])=>`<button class="chip" data-f="${k}" aria-pressed="${filter===k}"><span class="c num">${fmt(c[k])}</span><span class="l"><span class="dot" style="background:${col}"></span>${l}</span></button>`).join("");
+  const rows = results.map((r,n)=>({r,n})).filter(x=>filter==="all"||x.r.v.cat===filter);
+  const MAX=2000;
+  $("tbody").innerHTML = rows.length ? rows.slice(0,MAX).map(({r,n})=>{
+    const i=r.L.ids[0], has=i!==undefined;
+    return `<tr class="r-${r.v.cat}"><td class="num">${n+1}</td><td>${esc(r.it.name)}${r.it.cin?`<div class="mono">${esc(r.it.cin)}</div>`:""}</td>
+      <td><span class="pill p-${r.v.cat}">${esc(r.v.label)}</span></td>
+      <td>${has?esc(R.name[i]):"—"}</td><td class="mono">${has?esc(R.cin[i]):""}</td><td>${has?esc(R.status[i]):""}</td><td>${has?esc(R.roc[i]):""}</td><td>${esc(basis(r.L))}</td></tr>`;
+  }).join("") + (rows.length>MAX?`<tr><td colspan="8" class="empty">Showing the first ${fmt(MAX)} rows. Export to see all ${fmt(rows.length)}.</td></tr>`:"")
+  : `<tr><td colspan="8" class="empty">No entries in this group.</td></tr>`;
+}
+function resultTable(){
+  const head=["#","Your entry","Your CIN","Result","Matched company","Matched CIN","RoC status","Date struck off","RoC","State","STK-7 notice","Source file","CIN confidence","Basis"];
+  return [head, ...results.map((r,n)=>{const i=r.L.ids[0],h=i!==undefined; return [n+1,r.it.name,r.it.cin,r.v.label,h?R.name[i]:"",h?R.cin[i]:"",h?R.status[i]:"",h?R.struck[i]:"",h?R.roc[i]:"",h?stateOf(i):"",h?R.notice[i]:"",h?R.src[i]:"",h?R.conf[i]:"",basis(r.L)];})];
+}
+
+/* ---------- Export ---------- */
+// Inside claude.ai the page saves through the viewer's "downloads" capability (the viewer confirms each save).
+// Opened directly from disk there is no window.claude, so a normal browser download is used instead.
+async function getDownloads(){ try{ return (window.claude && claude.use) ? await claude.use("downloads") : null; }catch(e){ return null; } }
+const SAVE_ERR = {declined:"Save cancelled.", rate_limited:"A save prompt is already open. Finish or close it, then try again.",
+  too_large:"The file is too large to save here. Filter the results and export a smaller set.",
+  rejected_extension:"Excel files can't be saved in this view. Use Copy table and paste into Excel.",
+  extension_not_enabled:"Excel files can't be saved in this view. Use Copy table and paste into Excel."};
+async function exportXlsx(){
+  if(!results.length){ $("exportMsg").textContent="Run a check first."; return; }
+  const ws = XLSX.utils.aoa_to_sheet(resultTable());
+  ws["!cols"]=[{wch:5},{wch:40},{wch:24},{wch:22},{wch:44},{wch:24},{wch:24},{wch:12},{wch:16},{wch:16},{wch:30},{wch:34},{wch:26},{wch:24}];
+  const info = XLSX.utils.aoa_to_sheet([["Struck-off company check"],["Run on", new Date().toLocaleString("en-IN")],["Register", isDemo?"Demo register (fictitious)":files.map(f=>f.name).join(", ")],["Register size", R.name.length],["Note","Confirm each hit on the MCA portal before acting. Struck-off companies can be restored under s.252."]]);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Results"); XLSX.utils.book_append_sheet(wb, info, "About");
+  const blob = new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]);
+  const fname = `struck-off-check-${new Date().toISOString().slice(0,10)}.xlsx`;
+  $("exportMsg").textContent = "Preparing file…";
+  if(!window.claude){   // opened as a local file: plain browser download
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); $("exportMsg").textContent="Downloaded "+fname; return;
+  }
+  const downloads = await getDownloads();
+  if(!downloads){ $("exportMsg").textContent="File saving isn't available in this view. Use Copy table and paste into Excel."; return; }
+  try{ const r = await downloads.save({filename:fname, data:blob}); $("exportMsg").textContent = r && r.status==="delivered" ? "Sent "+fname : "Saved "+fname; }
+  catch(e){ const c=e&&e.code; $("exportMsg").textContent = SAVE_ERR[c] || `Could not save the file${c?" ("+c+")":""}. Use Copy table instead.`; }
+}
+async function copyTable(){
+  const tsv = resultTable().map(r=>r.map(c=>String(c??"").replace(/\t|\n/g," ")).join("\t")).join("\n");
+  try{ await navigator.clipboard.writeText(tsv); $("exportMsg").textContent="Copied. Paste into Excel."; }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=tsv; document.body.appendChild(ta); ta.select(); $("exportMsg").textContent="Press Ctrl+C / Cmd+C to copy the selected table."; setTimeout(()=>ta.remove(),15000); }
+}
+
+/* ---------- Wiring ---------- */
+function setTab(t){
+  for(const [k,tab,pane] of [["search","tabSearch","paneSearch"],["bulk","tabBulk","paneBulk"],["admin","tabAdmin","paneAdmin"]]){ $(tab).setAttribute("aria-selected", k===t); $(pane).hidden = k!==t; }
+  if(t==="admin") loadRequests();
+}
+$("tabSearch").onclick=()=>setTab("search"); $("tabBulk").onclick=()=>setTab("bulk"); $("tabAdmin").onclick=()=>setTab("admin");
+$("searchForm").addEventListener("submit",e=>{e.preventDefault(); renderSearch();});
+$("regFile").addEventListener("change",e=>{ loadRegisterFiles([...e.target.files]); e.target.value=""; });
+$("bulkFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) readBulkFile(f).catch(err=>{$("bulkFileMsg").textContent="Could not read that file: "+(err.message||err);}); e.target.value=""; });
+for(const [dz,fn] of [["regDrop",fs=>loadRegisterFiles(fs)],["bulkDrop",fs=>fs[0]&&readBulkFile(fs[0])]]){
+  const el=$(dz);
+  el.addEventListener("dragover",e=>{e.preventDefault(); el.classList.add("over");});
+  el.addEventListener("dragleave",()=>el.classList.remove("over"));
+  el.addEventListener("drop",e=>{e.preventDefault(); el.classList.remove("over"); fn([...e.dataTransfer.files]);});
+}
+$("runBulk").onclick=runBulk;
+$("colSheet").addEventListener("change",()=>showBulkSheet(+$("colSheet").value));
+$("regAskCheck").onclick=()=>{ const p=pendingReg; pendingReg=null; $("regAsk").hidden=true; if(!p) return; setTab("bulk");
+  readBulkFile(p.file).then(()=>{ $("bulkMsg").textContent=""; }).catch(err=>{$("bulkFileMsg").textContent="Could not read that file: "+(err.message||err);}); };
+$("regAskAdd").onclick=async()=>{ const p=pendingReg; pendingReg=null; $("regAsk").hidden=true; if(!p) return; mergeExtra(p.reg, p.info); await finishAdd(); };
+$("colName").addEventListener("change",previewBulk);
+$("demoList").onclick=()=>{ if(!isDemo && R && R.name.length){ $("bulkMsg").textContent="The demo list only matches the demo register. Clear the register to try it."; return; } $("paste").value=DEMO_LIST; bulkRows=null; $("colmap").hidden=true; runBulk(); };
+$("chips").addEventListener("click",e=>{ const b=e.target.closest("[data-f]"); if(b){ filter=b.dataset.f; renderResults(); } });
+$("exportX").onclick=exportXlsx; $("copyT").onclick=copyTable;
+$("clearReg").onclick=async()=>{ await clearCache(); EXTRA=null; extraFiles=[]; results=[]; $("results").hidden=true; $("searchOut").innerHTML=""; compose();
+  setRegProgress(0, BASE ? "Added files removed. The built-in register stays loaded." : "Register cleared. Demo data shown."); };
+
+/* ---------- Sign-in (website build) ----------
+   window.SOC_CONFIG = {url, key, bucket, object, login} is injected by pipeline/build_website.py. Without it (the
+   claude.ai artifact) the page runs as before. With it: no session -> login page; signed in but not approved ->
+   "pending" screen; approved -> the register is downloaded from the private bucket. */
+function gate(title, text, actions){
+  $("gate").hidden = false; $("gateTitle").textContent = title; $("gateText").textContent = text;
+  $("gateActions").innerHTML = ""; for(const a of actions||[]) $("gateActions").append(a);
+}
+function gateBtn(label, fn, primary){ const b=document.createElement("button"); b.type="button"; b.className="btn"+(primary?" primary":""); b.textContent=label; b.onclick=fn; return b; }
+async function signOut(){ try{ await sb.auth.signOut(); }catch(e){} location.replace(CFG.login); }
+async function requireApproved(){
+  gate("Checking your sign-in…", "One moment.");
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){ location.replace(CFG.login + "?next=" + encodeURIComponent(location.pathname)); return false; }
+  const {data:prof, error} = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
+  me = prof || {email: session.user.email, status: "pending"};
+  $("userEmail").textContent = me.email; $("userBox").hidden = false; $("signOut").onclick = signOut;
+  if(error){ gate("Couldn't check your access", "Please try again in a minute. ("+(error.message||error)+")", [gateBtn("Try again", ()=>location.reload(), true), gateBtn("Sign out", signOut)]); return false; }
+  if(me.status === "rejected"){ gate("Access not approved", `The request for ${me.email} was not approved. Contact the site owner if you think this is a mistake.`, [gateBtn("Sign out", signOut, true)]); return false; }
+  if(me.status !== "approved"){ gate("Your access request is pending", `Thanks${me.full_name?", "+me.full_name:""}. We have your request for ${me.email}. You'll be able to use the checker as soon as it's approved; this page opens it once you sign in again.`, [gateBtn("Check again", ()=>location.reload(), true), gateBtn("Sign out", signOut)]); return false; }
+  $("gate").hidden = true;
+  if(me.is_admin){ $("tabAdmin").hidden = false; refreshReqCount(); }
+  return true;
+}
+
+/* ---------- Visits ---------- */
+function visitorId(){ try{ let v=localStorage.getItem("soc_visitor"); if(!v){ v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)); localStorage.setItem("soc_visitor",v); } return v; }catch(e){ return "anon-"+String(Math.random()).slice(2,10); } }
+function logVisit(){ if(sb) sb.rpc("log_visit",{p_path:location.pathname, p_visitor:visitorId()}).then(()=>{},()=>{}); }
+async function loadVisitStats(){
+  const {data:v, error} = await sb.rpc("visit_stats");
+  if(error){ $("visitTiles").innerHTML = `<p class="hint">Visit counts unavailable: ${esc(error.message)}</p>`; return; }
+  const tile = (k,val,sub) => `<div class="kpi"><span class="k">${k}</span><span class="v num">${fmt(val)}</span><span class="s">${sub}</span></div>`;
+  $("visitTiles").innerHTML = tile("Total visits", v.total, "since counting began") + tile("Today", v.today, "India time") +
+    tile("Last 7 days", v.last7, `${fmt(v.unique7)} unique visitors`) + tile("Unique visitors", v.unique_total, "different browsers, all time");
+  const days = (v.by_day||[]).map(d=>[d.day.slice(5).split("-").reverse().join("/"), d.visits]);
+  const box=$("visitChart"); box.textContent="";
+  if(days.length){
+    const W=520,H=150,L=34,Rr=6,T=14,B=22, max=niceMax(Math.max(1,...days.map(d=>d[1])));
+    const svg=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":"Visits per day, last 30 days"});
+    for(let k=0;k<=2;k++){ const val=max*k/2, y=T+(H-T-B)*(1-k/2); svg.append(svgEl("line",{x1:L,x2:W-Rr,y1:y,y2:y,class:"gl"})); svg.append(svgEl("text",{x:L-6,y:y+4,"text-anchor":"end"},shortN(val))); }
+    const bw=(W-L-Rr)/days.length;
+    days.forEach(([d,n],k)=>{ const h=(H-T-B)*n/max, x=L+k*bw+bw*.15;
+      const r=svgEl("rect",{x,y:H-B-h,width:bw*.7,height:Math.max(h,n?1:0),rx:1.5,class:k===days.length-1?"bar":"bar2"}); r.append(svgEl("title",{},`${d}: ${n} visits`)); svg.append(r);
+      if(k%5===0 || k===days.length-1) svg.append(svgEl("text",{x:x+bw*.35,y:H-B+14,"text-anchor":"middle"},d)); });
+    box.append(svg);
+  }
+  $("visitPages").textContent = (v.by_page||[]).length ? "By page: " + v.by_page.map(p=>`${p.path} ${fmt(p.visits)}`).join(" · ") : "";
+}
+
+/* ---------- Access requests (admins) ---------- */
+let reqFilter = "pending", reqRows = [];
+const fmtDate = d => d ? new Date(d).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "";
+async function refreshReqCount(){
+  const {count} = await sb.from("profiles").select("id",{count:"exact",head:true}).eq("status","pending");
+  $("reqCount").textContent = count||""; $("reqCount").hidden = !count;
+}
+async function loadRequests(){
+  $("reqMsg").textContent = "";
+  const {data, error} = await sb.from("profiles").select("*").order("requested_at",{ascending:false});
+  if(error){ $("reqMsg").textContent = "Couldn't load requests: "+error.message; return; }
+  reqRows = data||[]; renderRequests(); refreshReqCount(); loadVisitStats();
+}
+function renderRequests(){
+  const c = {pending:0, approved:0, rejected:0, all:reqRows.length}; reqRows.forEach(r=>c[r.status]++);
+  $("reqChips").innerHTML = [["pending","Pending","var(--brass)"],["approved","Approved","var(--clear)"],["rejected","Rejected","var(--struck)"],["all","All","var(--faint)"]]
+    .map(([k,l,col])=>`<button class="chip" data-r="${k}" aria-pressed="${reqFilter===k}"><span class="c num">${fmt(c[k])}</span><span class="l"><span class="dot" style="background:${col}"></span>${l}</span></button>`).join("");
+  const rows = reqRows.filter(r=>reqFilter==="all"||r.status===reqFilter);
+  const pill = {pending:"p-pending", approved:"p-clear", rejected:"p-struck"};
+  $("reqBody").innerHTML = rows.length ? rows.map(r=>{
+    const self = me && r.id===me.id;
+    const acts = self ? '<span class="hint">You</span>'
+      : r.status==="approved" ? `<button class="btn sm danger" data-act="rejected" data-id="${r.id}">Revoke</button>`
+      : `<span class="row" style="gap:6px"><button class="btn sm primary" data-act="approved" data-id="${r.id}">Approve</button>${r.status==="pending"?`<button class="btn sm danger" data-act="rejected" data-id="${r.id}">Reject</button>`:""}</span>`;
+    return `<tr><td>${esc(r.full_name||"—")}${r.is_admin?' <span class="pill p-other">admin</span>':""}</td><td>${esc(r.email)}</td><td>${esc(r.company||"")}</td><td>${fmtDate(r.requested_at)}</td>
+      <td><span class="pill ${pill[r.status]||"p-other"}">${esc(r.status)}</span>${r.decided_at?`<div class="hint">${fmtDate(r.decided_at)}</div>`:""}</td><td>${acts}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="empty">No ${reqFilter==="all"?"":reqFilter+" "}requests.</td></tr>`;
+}
+async function decide(id, status){
+  const r = reqRows.find(x=>x.id===id);
+  const {error} = await sb.from("profiles").update({status, decided_at:new Date().toISOString(), decided_by:me.email}).eq("id", id);
+  $("reqMsg").textContent = error ? "Couldn't update: "+error.message : `${r?r.email:"User"} ${status==="approved"?"approved. They can sign in and use the checker now.":"marked as not approved."}`;
+  loadRequests();
+}
+$("reqChips").addEventListener("click", e=>{ const b=e.target.closest("[data-r]"); if(b){ reqFilter=b.dataset.r; renderRequests(); } });
+$("reqBody").addEventListener("click", e=>{ const b=e.target.closest("[data-act]"); if(b){ b.disabled=true; decide(b.dataset.id, b.dataset.act); } });
+$("reqRefresh").onclick = loadRequests;
+$("regUpload").addEventListener("change", async e=>{
+  const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+  $("reqMsg").textContent = `Uploading ${f.name}…`;
+  const {error} = await sb.storage.from(CFG.bucket).upload(CFG.object, f, {upsert:true, contentType:"text/plain"});
+  $("reqMsg").textContent = error ? "Upload failed: "+error.message : `Register data replaced (${(f.size/1e6).toFixed(1)} MB). Users get it on their next visit.`;
+});
+
+/* ---------- Start ---------- */
+const CFG = window.SOC_CONFIG || null;
+const sb = CFG && window.supabase ? window.supabase.createClient(CFG.url, CFG.key) : null;
+let me = null;
+setTab("search");
+loadDemo(); $("demoBanner").hidden=true; $("regTag").textContent="Loading…"; $("kCountS").textContent="Loading the STK-7 register…";
+(async()=>{
+  if(CFG && !sb){ gate("Sign-in is unavailable", "The sign-in service didn't load. Check your connection and reload the page.", [gateBtn("Reload", ()=>location.reload(), true)]); return; }
+  if(CFG){ $("addFilesBox").hidden = true; await clearCache(); }   // website: the shared register only; nothing added locally
+  logVisit();
+  if(sb && !(await requireApproved())) return;
+  try{ await loadBuiltin(); }catch(e){ BASE=null; }
+  const c = CFG ? null : await loadCache();
+  if(c && c.E && c.E.name && c.E.name.length){ EXTRA=fillReg(c.E); extraFiles=c.files||[]; }
+  compose();
+  if(BASE) setRegProgress(0, `Register ready: ${fmt(R.name.length)} companies.`);
+  else { setRegProgress(0, "Couldn't load the built-in register here. Demo data shown; load the register workbook to run real checks.", true); $("q").value="Demo Bluewater Logistics Pvt Ltd"; renderSearch(); }
+})();
+})();
+</script>
+</body>
+</html>
