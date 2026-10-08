@@ -231,7 +231,7 @@ tr.r-review td:first-child{box-shadow:inset 3px 0 0 var(--review)}
       </div>
     </div>
     <div class="law"><span>Companies Act, 2013 · s.248</span><span>STK-7 notices</span><span>Restoration: s.252 (NCLT)</span></div>
-    <div class="userbox" id="userBox" hidden><span>Signed in as <b id="userEmail"></b></span><button type="button" id="signOut">Sign out</button></div>
+    <div class="userbox" id="userBox" hidden><span>Welcome, <b id="userEmail"></b></span><button type="button" id="signOut">Sign out</button></div>
   </div>
 </header>
 
@@ -345,7 +345,7 @@ tr.r-review td:first-child{box-shadow:inset 3px 0 0 var(--review)}
 
     <!-- Register -->
     <div class="col">
-      <section class="panel" aria-labelledby="regh">
+      <section class="panel" aria-labelledby="regh" id="regPanel">
         <div class="panel-h"><h2 id="regh">Reference register</h2><span class="tag" id="regTag">Demo data</span></div>
         <div class="panel-b">
           <div id="demoBanner" class="banner demo" hidden>Demo register: fictitious companies so you can try the tool. Load the STK-7 register workbook or MCA master data to run real checks.</div>
@@ -1040,7 +1040,10 @@ async function requireApproved(){
   if(!session){ location.replace(CFG.login + "?next=" + encodeURIComponent(location.pathname)); return false; }
   const {data:prof, error} = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
   me = prof || {email: session.user.email, status: "pending"};
-  $("userEmail").textContent = me.email; $("userBox").hidden = false; $("signOut").onclick = signOut;
+  const meta = session.user.user_metadata || {};
+  const name = (me.full_name || meta.full_name || meta.name || "").trim();
+  $("userEmail").textContent = name || me.email.split("@")[0];   // full name from the sign-up form or Google; else the email's user part
+  $("userEmail").title = me.email; $("userBox").hidden = false; $("signOut").onclick = signOut;
   if(error){ gate("Couldn't check your access", "Please try again in a minute. ("+(error.message||error)+")", [gateBtn("Try again", ()=>location.reload(), true), gateBtn("Sign out", signOut)]); return false; }
   if(me.status === "rejected"){ gate("Access not approved", `The request for ${me.email} was not approved. Contact the site owner if you think this is a mistake.`, [gateBtn("Sign out", signOut, true)]); return false; }
   if(me.status !== "approved"){ gate("Your access request is pending", `Thanks${me.full_name?", "+me.full_name:""}. We have your request for ${me.email}. You'll be able to use the checker as soon as it's approved; this page opens it once you sign in again.`, [gateBtn("Check again", ()=>location.reload(), true), gateBtn("Sign out", signOut)]); return false; }
@@ -1125,7 +1128,7 @@ setTab("search");
 loadDemo(); $("demoBanner").hidden=true; $("regTag").textContent="Loading…"; $("kCountS").textContent="Loading the STK-7 register…";
 (async()=>{
   if(CFG && !sb){ gate("Sign-in is unavailable", "The sign-in service didn't load. Check your connection and reload the page.", [gateBtn("Reload", ()=>location.reload(), true)]); return; }
-  if(CFG){ $("addFilesBox").hidden = true; await clearCache(); }   // website: the shared register only; nothing added locally
+  if(CFG){ $("addFilesBox").hidden = true; $("regPanel").hidden = true; await clearCache(); }   // website: register panel not shown; admins upload under Access requests   // website: the shared register only; nothing added locally
   logVisit();
   if(sb && !(await requireApproved())) return;
   try{ await loadBuiltin(); }catch(e){
