@@ -1128,7 +1128,14 @@ loadDemo(); $("demoBanner").hidden=true; $("regTag").textContent="Loading…"; $
   if(CFG){ $("addFilesBox").hidden = true; await clearCache(); }   // website: the shared register only; nothing added locally
   logVisit();
   if(sb && !(await requireApproved())) return;
-  try{ await loadBuiltin(); }catch(e){ BASE=null; }
+  try{ await loadBuiltin(); }catch(e){
+    BASE=null;
+    if(sb){   // website: never fall back to the demo companies for a signed-in user
+      gate("The register couldn't be loaded", "The struck-off register isn't available right now ("+((e&&e.message)||e)+"). Please reload in a minute; if it keeps happening, the site owner needs to upload the register file.",
+           [gateBtn("Reload", ()=>location.reload(), true), gateBtn("Sign out", signOut)]);
+      return;
+    }
+  }
   const c = CFG ? null : await loadCache();
   if(c && c.E && c.E.name && c.E.name.length){ EXTRA=fillReg(c.E); extraFiles=c.files||[]; }
   compose();
