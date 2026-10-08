@@ -257,7 +257,7 @@ tr.r-review td:first-child{box-shadow:inset 3px 0 0 var(--review)}
         <div class="tabs" role="tablist">
           <button role="tab" id="tabSearch" aria-selected="true" aria-controls="paneSearch">Search a company</button>
           <button role="tab" id="tabBulk" aria-selected="false" aria-controls="paneBulk">Check a vendor / customer list</button>
-          <button role="tab" id="tabAdmin" aria-selected="false" aria-controls="paneAdmin" hidden>Access requests<span class="count" id="reqCount" hidden></span></button>
+          <button role="tab" id="tabAdmin" aria-selected="false" aria-controls="paneAdmin" hidden>Users<span class="count" id="reqCount" hidden></span></button>
         </div>
 
         <div id="paneSearch" role="tabpanel" aria-labelledby="tabSearch" class="panel-b">
@@ -322,14 +322,16 @@ tr.r-review td:first-child{box-shadow:inset 3px 0 0 var(--review)}
           <div class="kpis" id="visitTiles"></div>
           <div id="visitChart"></div>
           <div class="hint" id="visitPages"></div>
-          <h3 class="sub-h">Access requests</h3>
-          <div class="row" style="justify-content:space-between">
-            <div class="chips" id="reqChips"></div>
+          <h3 class="sub-h">Registered users</h3>
+          <div class="chips" id="reqChips"></div>
+          <div class="row">
+            <div class="field" style="flex:1;min-width:200px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="reqSearch" type="search" placeholder="Search name, email or firm" aria-label="Search users" style="font-size:14px;padding:9px 10px 9px 36px"></div>
+            <button class="btn sm" id="reqExport" type="button">Export to Excel</button>
             <button class="btn sm" id="reqRefresh" type="button">Refresh</button>
           </div>
           <div class="tablebox"><table class="req">
-            <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Requested</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody id="reqBody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            <thead><tr><th>Name</th><th>Email</th><th>Firm</th><th>Signed up</th><th>Via</th><th>Last sign-in</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="reqBody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
           </table></div>
           <div class="msg" id="reqMsg" role="status"></div>
           <h3 class="sub-h">Update the register data</h3>
@@ -1085,24 +1087,29 @@ async function refreshReqCount(){
 }
 async function loadRequests(){
   $("reqMsg").textContent = "";
-  const {data, error} = await sb.from("profiles").select("*").order("requested_at",{ascending:false});
-  if(error){ $("reqMsg").textContent = "Couldn't load requests: "+error.message; return; }
+  let {data, error} = await sb.rpc("admin_users");
+  if(error){ ({data, error} = await sb.from("profiles").select("*").order("requested_at",{ascending:false})); }
+  if(error){ $("reqMsg").textContent = "Couldn't load users: "+error.message; return; }
   reqRows = data||[]; renderRequests(); refreshReqCount(); loadVisitStats();
 }
 function renderRequests(){
   const c = {pending:0, approved:0, rejected:0, all:reqRows.length}; reqRows.forEach(r=>c[r.status]++);
   $("reqChips").innerHTML = [["pending","Pending","var(--brass)"],["approved","Approved","var(--clear)"],["rejected","Rejected","var(--struck)"],["all","All","var(--faint)"]]
     .map(([k,l,col])=>`<button class="chip" data-r="${k}" aria-pressed="${reqFilter===k}"><span class="c num">${fmt(c[k])}</span><span class="l"><span class="dot" style="background:${col}"></span>${l}</span></button>`).join("");
-  const rows = reqRows.filter(r=>reqFilter==="all"||r.status===reqFilter);
+  const q = ($("reqSearch").value||"").trim().toLowerCase();
+  const rows = reqRows.filter(r=>(reqFilter==="all"||r.status===reqFilter) && (!q || [r.full_name,r.email,r.company].some(x=>String(x||"").toLowerCase().includes(q))));
   const pill = {pending:"p-pending", approved:"p-clear", rejected:"p-struck"};
   $("reqBody").innerHTML = rows.length ? rows.map(r=>{
     const self = me && r.id===me.id;
     const acts = self ? '<span class="hint">You</span>'
       : r.status==="approved" ? `<button class="btn sm danger" data-act="rejected" data-id="${r.id}">Revoke</button>`
       : `<span class="row" style="gap:6px"><button class="btn sm primary" data-act="approved" data-id="${r.id}">Approve</button>${r.status==="pending"?`<button class="btn sm danger" data-act="rejected" data-id="${r.id}">Reject</button>`:""}</span>`;
-    return `<tr><td>${esc(r.full_name||"—")}${r.is_admin?' <span class="pill p-other">admin</span>':""}</td><td>${esc(r.email)}</td><td>${esc(r.company||"")}</td><td>${fmtDate(r.requested_at)}</td>
+    const via = r.provider ? (r.provider==="google" ? "Google" : "Email") : "";
+    const unconfirmed = r.provider==="email" && !r.email_confirmed_at ? '<div class="hint">email not confirmed</div>' : "";
+    return `<tr><td>${esc(r.full_name||"—")}${r.is_admin?' <span class="pill p-other">admin</span>':""}</td><td>${esc(r.email)}${unconfirmed}</td><td>${esc(r.company||"")}</td><td>${fmtDate(r.requested_at)}</td>
+      <td>${via}</td><td>${r.last_sign_in_at?fmtDate(r.last_sign_in_at):(r.provider?'<span class="hint">never</span>':"")}</td>
       <td><span class="pill ${pill[r.status]||"p-other"}">${esc(r.status)}</span>${r.decided_at?`<div class="hint">${fmtDate(r.decided_at)}</div>`:""}</td><td>${acts}</td></tr>`;
-  }).join("") : `<tr><td colspan="6" class="empty">No ${reqFilter==="all"?"":reqFilter+" "}requests.</td></tr>`;
+  }).join("") : `<tr><td colspan="8" class="empty">No ${q?"matching ":""}${reqFilter==="all"?"":reqFilter+" "}users.</td></tr>`;
 }
 async function decide(id, status){
   const r = reqRows.find(x=>x.id===id);
@@ -1113,6 +1120,18 @@ async function decide(id, status){
 $("reqChips").addEventListener("click", e=>{ const b=e.target.closest("[data-r]"); if(b){ reqFilter=b.dataset.r; renderRequests(); } });
 $("reqBody").addEventListener("click", e=>{ const b=e.target.closest("[data-act]"); if(b){ b.disabled=true; decide(b.dataset.id, b.dataset.act); } });
 $("reqRefresh").onclick = loadRequests;
+$("reqSearch").addEventListener("input", renderRequests);
+$("reqExport").onclick = async ()=>{
+  const head = ["Name","Email","Firm","Signed up","Sign-in method","Email confirmed","Last sign-in","Status","Decided","Decided by","Admin"];
+  const d = x => x ? new Date(x).toLocaleString("en-IN") : "";
+  const rows = reqRows.map(r=>[r.full_name||"", r.email, r.company||"", d(r.requested_at), r.provider||"", r.provider==="email"?(r.email_confirmed_at?"Yes":"No"):(r.provider?"Yes":""), d(r.last_sign_in_at), r.status, d(r.decided_at), r.decided_by||"", r.is_admin?"Yes":""]);
+  const ws = XLSX.utils.aoa_to_sheet([head, ...rows]); ws["!cols"]=head.map((h,i)=>({wch:[22,30,24,20,12,10,20,10,20,22,6][i]}));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Users");
+  const blob = new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]);
+  const fname = `struck-off-check-users-${new Date().toISOString().slice(0,10)}.xlsx`;
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+  $("reqMsg").textContent = `Downloaded ${fname} (${rows.length} users).`;
+};
 $("regUpload").addEventListener("change", async e=>{
   const f = e.target.files[0]; e.target.value = ""; if(!f) return;
   $("reqMsg").textContent = `Uploading ${f.name}…`;
