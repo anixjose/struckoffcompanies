@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /app/
 Disallow: /login/
+
+Sitemap: https://struckoffcompanies.com/sitemap.xml
