@@ -408,7 +408,7 @@ const CIN_RE = /^[LU]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/;
 const LLPIN_RE = /^[A-Z]{3}-\d{4}$/;
 const LEGAL = new Set(["PRIVATE","PVT","PVTLTD","LIMITED","LTD","LLP","OPC","P","PLC","THE","PRIVATELIMITED"]);
 const WEAK = new Set(["INDIA","AND","OF","CO","COMPANY","SERVICES","SOLUTIONS","ENTERPRISES","TECHNOLOGIES","INFRA","INTERNATIONAL","TRADERS","TRADING","GROUP","INDUSTRIES","CONSULTANCY","CONSULTANTS","PROJECTS","VENTURES","EXPORTS","IMPORTS","GLOBAL","HOLDINGS","AGENCIES","AND"]);
-const FIELDS = ["cin","name","status","roc","state","date","struck","batch","conf","src","notice"];
+const FIELDS = ["cin","name","status","roc","state","date","struck","batch","conf","src","notice","mca"];
 const fmt = n => Number(n).toLocaleString("en-IN");
 
 /* ---------- Register store ---------- */
@@ -508,6 +508,7 @@ function verdict(L){
   if(L.kind==="none") return {cat:"clear", label:"Not found in register"};
   const i = L.ids[0]; const sc = statusClass(R.status[i]);
   if(L.kind==="fuzzy" && L.score<0.9) return {cat:"review", label:"Review: similar name", sc};
+  if(/^Not Strike Off/.test(R.mca[i]||"")) return {cat:"review", label:"Review: may be restored", sc};   // MCA master data no longer shows it struck off
   if(sc==="struck") return {cat:"struck", label:"Struck off", sc};
   if(sc==="pending") return {cat:"pending", label:"Strike-off in process", sc};
   if(sc==="dormant") return {cat:"pending", label:"Dormant", sc};
@@ -537,7 +538,8 @@ function mapCols(headers){
     batch: pick(h,[/^batch$/]),
     conf: pick(h,[/^cin confidence$/]),
     src: pick(h,[/^source file$/]),
-    notice: pick(h,[/stk-7 notice no/, /^notice no/])
+    notice: pick(h,[/stk-7 notice no/, /^notice no/]),
+    mca: pick(h,[/^mca status/])
   };
 }
 function headerRowIndex(rows, strongOnly){
@@ -563,7 +565,7 @@ function addRows(rows, m, keepFilter){
     T.cin.push(cinCell.toUpperCase()); T.name.push(name); T.status.push(status);
     T.roc.push(cell(row,m.roc)); T.state.push(cell(row,m.state)); T.date.push(cell(row,m.date));
     T.struck.push(cell(row,m.struck)); T.batch.push(cell(row,m.batch)); T.conf.push(cell(row,m.conf));
-    T.src.push(cell(row,m.src)); T.notice.push(cell(row,m.notice));
+    T.src.push(cell(row,m.src)); T.notice.push(cell(row,m.notice)); T.mca.push(cell(row,m.mca));
     kept++;
   }
   return kept;
@@ -694,6 +696,7 @@ async function loadBuiltin(){
   const un = (col, key) => { const L=D[key]; return c[col].map(i=>L[i]); };
   r.cin=c.cin; r.name=c.name; r.struck=c.struck; r.date=c.inc;
   r.state=un("state","state"); r.roc=un("roc","roc"); r.notice=un("notice","notice"); r.batch=un("batch","batch"); r.conf=un("conf","conf"); r.src=un("src","src");
+  r.mca = c.mca ? un("mca","mca") : new Array(n).fill("");
   r.status=r.batch.map(b => /^MCA master/.test(b) ? "Strike Off (MCA master data)" : "Strike Off (per notice list)");
   BASE = r;
   baseInfo = {name:`STK-7 register, 2017–2026 (built in, updated ${d.built})`, rows:n, kept:n, note:""};
@@ -858,7 +861,7 @@ function card(i, score, showSim){
     const pc = sc==="struck"?"struck":(sc==="pending"||sc==="dormant")?"pending":sc==="active"?"clear":"other";
     const cc = confClass(R.conf[i]); const cpill = cc ? `<span class="pill ${cc==="high"?"p-clear":cc==="low"?"p-pending":"p-other"}">CIN ${esc(cc)}</span>` : "";
     return `<article class="card c-${pc}"><div class="card-top"><span class="nm">${esc(R.name[i])}</span><span class="row" style="gap:6px">${cpill}<span class="pill p-${pc}">${esc(R.status[i]||CLASS_LABEL[sc])}</span></span></div>
-      <dl class="facts">${fact("CIN",R.cin[i]||"No CIN",true)}${fact("Struck off",R.struck[i])}${fact("RoC",R.roc[i])}${fact("State / UT",stateOf(i))}${fact("Incorporated",R.date[i])}${fact("STK-7 notice",R.notice[i],true)}${fact("Source",R.src[i])}${showSim&&score!=null?fact("Name similarity",Math.round(score*100)+"%"):""}</dl></article>`;
+      <dl class="facts">${fact("CIN",R.cin[i]||"No CIN",true)}${fact("Struck off",R.struck[i])}${fact("RoC",R.roc[i])}${fact("State / UT",stateOf(i))}${fact("Incorporated",R.date[i])}${fact("STK-7 notice",R.notice[i],true)}${fact("MCA status (Jul 2026)",R.mca[i])}${fact("Source",R.src[i])}${showSim&&score!=null?fact("Name similarity",Math.round(score*100)+"%"):""}</dl></article>`;
 }
 
 /* ---------- Bulk ---------- */
@@ -974,8 +977,8 @@ function renderResults(){
   : `<tr><td colspan="8" class="empty">No entries in this group.</td></tr>`;
 }
 function resultTable(){
-  const head=["#","Your entry","Your CIN","Result","Matched company","Matched CIN","RoC status","Date struck off","RoC","State","STK-7 notice","Source file","CIN confidence","Basis"];
-  return [head, ...results.map((r,n)=>{const i=r.L.ids[0],h=i!==undefined; return [n+1,r.it.name,r.it.cin,r.v.label,h?R.name[i]:"",h?R.cin[i]:"",h?R.status[i]:"",h?R.struck[i]:"",h?R.roc[i]:"",h?stateOf(i):"",h?R.notice[i]:"",h?R.src[i]:"",h?R.conf[i]:"",basis(r.L)];})];
+  const head=["#","Your entry","Your CIN","Result","Matched company","Matched CIN","RoC status","Date struck off","RoC","State","STK-7 notice","MCA status (Jul 2026)","Source file","CIN confidence","Basis"];
+  return [head, ...results.map((r,n)=>{const i=r.L.ids[0],h=i!==undefined; return [n+1,r.it.name,r.it.cin,r.v.label,h?R.name[i]:"",h?R.cin[i]:"",h?R.status[i]:"",h?R.struck[i]:"",h?R.roc[i]:"",h?stateOf(i):"",h?R.notice[i]:"",h?R.mca[i]:"",h?R.src[i]:"",h?R.conf[i]:"",basis(r.L)];})];
 }
 
 /* ---------- Export ---------- */
@@ -989,7 +992,7 @@ const SAVE_ERR = {declined:"Save cancelled.", rate_limited:"A save prompt is alr
 async function exportXlsx(){
   if(!results.length){ $("exportMsg").textContent="Run a check first."; return; }
   const ws = XLSX.utils.aoa_to_sheet(resultTable());
-  ws["!cols"]=[{wch:5},{wch:40},{wch:24},{wch:22},{wch:44},{wch:24},{wch:24},{wch:12},{wch:16},{wch:16},{wch:30},{wch:34},{wch:26},{wch:24}];
+  ws["!cols"]=[{wch:5},{wch:40},{wch:24},{wch:22},{wch:44},{wch:24},{wch:24},{wch:12},{wch:16},{wch:16},{wch:30},{wch:40},{wch:34},{wch:26},{wch:24}];
   const info = XLSX.utils.aoa_to_sheet([["Struck-off company check"],["Run on", new Date().toLocaleString("en-IN")],["Register", isDemo?"Demo register (fictitious)":files.map(f=>f.name).join(", ")],["Register size", R.name.length],["Note","Confirm each hit on the MCA portal before acting. Struck-off companies can be restored under s.252."]]);
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Results"); XLSX.utils.book_append_sheet(wb, info, "About");
   const blob = new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]);
