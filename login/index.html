@@ -59,6 +59,47 @@ a{color:var(--accent)}
 .foot{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding-block:22px 34px}
 .foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Guide pages: dark ledger band with the title, then a reading column and a side card */
+.nav .links a.plain{color:inherit;text-decoration:none;font-weight:500;padding:8px 6px}
+.nav .links a.plain:hover{color:var(--brass)}
+.ghero{border-bottom:3px solid var(--brass)}
+.ghero .in{padding-block:18px 44px;max-width:52rem}
+.crumbs{font-size:13px;color:var(--ink-muted);display:flex;gap:6px;flex-wrap:wrap}
+.crumbs a{color:var(--ink-muted)}
+.ghero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.9rem,4.4vw,2.9rem);line-height:1.08;margin:12px 0 12px;text-wrap:balance}
+.ghero p{color:var(--ink-muted);font-size:1.08rem;margin:0;max-width:44rem}
+.glayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;padding-block:40px 24px;align-items:start}
+@media (max-width:900px){.glayout{grid-template-columns:minmax(0,1fr)}}
+.prose{max-width:46rem;font-size:16px;line-height:1.7}
+.prose h2{font-family:var(--f-display);font-size:clamp(1.35rem,2.6vw,1.7rem);line-height:1.2;margin:2.2em 0 .5em;text-wrap:balance}
+.prose h2:first-child{margin-top:0}
+.prose h3{font-size:1.05rem;margin:1.6em 0 .4em}
+.prose p,.prose ul,.prose ol{margin:0 0 1em}
+.prose li{margin-bottom:.35em}
+.prose .note{background:var(--brass-soft);border-left:3px solid var(--brass);border-radius:0 8px 8px 0;padding:12px 16px;font-size:15px}
+.prose .tbl{overflow-x:auto;margin:0 0 1.2em;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.prose table{border-collapse:collapse;width:100%;font-size:14.5px}
+.prose th,.prose td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.prose th{background:var(--sunk);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.prose tr:last-child td{border-bottom:0}
+.prose td.n,.prose th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prose tfoot td{font-weight:600;background:var(--sunk)}
+.prose code{font-family:var(--f-mono);font-size:.88em;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.side{position:sticky;top:20px;display:flex;flex-direction:column;gap:16px}
+@media (max-width:900px){.side{position:static}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow)}
+.card h2{font-family:var(--f-display);font-size:1.2rem;margin:0 0 6px}
+.card p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.card ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14.5px}
+.card.cta-card{border-top:3px solid var(--brass)}
+.guides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:720px){.guides{grid-template-columns:minmax(0,1fr)}}
+a.gcard{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;color:inherit;text-decoration:none}
+a.gcard:hover{border-color:var(--accent)}
+a.gcard h3{margin:0;font-size:16.5px;color:var(--accent)}
+a.gcard p{margin:0;color:var(--muted);font-size:14px}
+.foot nav{display:flex;flex-wrap:wrap;gap:6px 16px}
+.foot nav a{color:var(--muted)}
 
 /* Sign-in: split screen, ledger panel with the pitch on the left, form card on the right */
 body{min-height:100%}

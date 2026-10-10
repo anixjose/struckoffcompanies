@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>How to Check if a Company is Struck Off in India (MCA, CIN, STK-7)</title>
+<meta name="description" content="Step-by-step: check a company's status on the MCA portal, read the STK-7 strike-off notice, confirm it hasn't been restored, and screen a whole vendor list at once.">
+<link rel="canonical" href="https://struckoffcompanies.com/guides/how-to-check-if-a-company-is-struck-off/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://struckoffcompanies.com/guides/how-to-check-if-a-company-is-struck-off/">
+<meta property="og:title" content="How to check if a company is struck off in India">
+<meta property="og:description" content="Step-by-step: check a company's status on the MCA portal, read the STK-7 strike-off notice, confirm it hasn't been restored, and screen a whole vendor list at once.">
+<meta name="theme-color" content="#0e3b2e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%230e3b2e'/%3E%3Cpath d='M10 12h16M10 18h10M10 24h7' stroke='%23f4efdf' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M8 27 28 9' stroke='%23c9a227' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Shared look for the public pages (landing, sign-in): registry green + brass, same tokens as the checker. */
+:root{
+  --bg:#edf1ea; --surface:#fffdf8; --sunk:#f5f6ee; --line:#dfe4d6; --line-strong:#c6cfbc;
+  --fg:#15241d; --muted:#56675d; --faint:#87958b;
+  --ink:#0e3b2e; --ink-2:#082a20; --ink-fg:#f4efdf; --ink-muted:#a9c1b4;
+  --accent:#1f6b4f; --accent-soft:#e2eee6; --brass:#c9a227; --brass-deep:#9c7a12; --brass-soft:#f5ecce; --brass-ink:#1d1a0c;
+  --struck:#b3261e; --struck-bg:#fbeae8; --clear:#1d7048; --clear-bg:#e3f3ea;
+  --shadow:0 1px 2px rgba(14,59,46,.07),0 8px 24px rgba(14,59,46,.08);
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1511; --surface:#10201a; --sunk:#0c1a15; --line:#1e3329; --line-strong:#2b4537;
+  --fg:#e5ece6; --muted:#9db1a5; --faint:#6e8478;
+  --ink:#0b2a20; --ink-2:#061a13; --ink-fg:#efe8d2; --ink-muted:#93ac9e;
+  --accent:#5fbf94; --accent-soft:#15302a; --brass:#d9b44a; --brass-deep:#e7c66a; --brass-soft:#2c2711; --brass-ink:#161307;
+  --struck:#ff8a80; --struck-bg:#3a1714; --clear:#7fd3a6; --clear-bg:#142d22;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1511; --surface:#10201a; --sunk:#0c1a15; --line:#1e3329; --line-strong:#2b4537;
+  --fg:#e5ece6; --muted:#9db1a5; --faint:#6e8478;
+  --ink:#0b2a20; --ink-2:#061a13; --ink-fg:#efe8d2; --ink-muted:#93ac9e;
+  --accent:#5fbf94; --accent-soft:#15302a; --brass:#d9b44a; --brass-deep:#e7c66a; --brass-soft:#2c2711; --brass-ink:#161307;
+  --struck:#ff8a80; --struck-bg:#3a1714; --clear:#7fd3a6; --clear-bg:#142d22;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+a{color:var(--accent)}
+.num{font-variant-numeric:tabular-nums}
+.ledger{background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px),linear-gradient(125deg,var(--ink),var(--ink-2));color:var(--ink-fg)}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px}
+.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-family:var(--f-display);font-weight:700;font-size:19px}
+.brand svg{flex:none}
+.nav .links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:600;font-size:14.5px;border-radius:7px;padding:10px 18px;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink-fg);border-color:color-mix(in srgb,var(--brass) 55%,transparent)}
+.btn.ghost:hover{border-color:var(--brass);color:var(--brass)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+:is(a,button,input):focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.foot{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding-block:22px 34px}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Guide pages: dark ledger band with the title, then a reading column and a side card */
+.nav .links a.plain{color:inherit;text-decoration:none;font-weight:500;padding:8px 6px}
+.nav .links a.plain:hover{color:var(--brass)}
+.ghero{border-bottom:3px solid var(--brass)}
+.ghero .in{padding-block:18px 44px;max-width:52rem}
+.crumbs{font-size:13px;color:var(--ink-muted);display:flex;gap:6px;flex-wrap:wrap}
+.crumbs a{color:var(--ink-muted)}
+.ghero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.9rem,4.4vw,2.9rem);line-height:1.08;margin:12px 0 12px;text-wrap:balance}
+.ghero p{color:var(--ink-muted);font-size:1.08rem;margin:0;max-width:44rem}
+.glayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;padding-block:40px 24px;align-items:start}
+@media (max-width:900px){.glayout{grid-template-columns:minmax(0,1fr)}}
+.prose{max-width:46rem;font-size:16px;line-height:1.7}
+.prose h2{font-family:var(--f-display);font-size:clamp(1.35rem,2.6vw,1.7rem);line-height:1.2;margin:2.2em 0 .5em;text-wrap:balance}
+.prose h2:first-child{margin-top:0}
+.prose h3{font-size:1.05rem;margin:1.6em 0 .4em}
+.prose p,.prose ul,.prose ol{margin:0 0 1em}
+.prose li{margin-bottom:.35em}
+.prose .note{background:var(--brass-soft);border-left:3px solid var(--brass);border-radius:0 8px 8px 0;padding:12px 16px;font-size:15px}
+.prose .tbl{overflow-x:auto;margin:0 0 1.2em;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.prose table{border-collapse:collapse;width:100%;font-size:14.5px}
+.prose th,.prose td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.prose th{background:var(--sunk);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.prose tr:last-child td{border-bottom:0}
+.prose td.n,.prose th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prose tfoot td{font-weight:600;background:var(--sunk)}
+.prose code{font-family:var(--f-mono);font-size:.88em;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.side{position:sticky;top:20px;display:flex;flex-direction:column;gap:16px}
+@media (max-width:900px){.side{position:static}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow)}
+.card h2{font-family:var(--f-display);font-size:1.2rem;margin:0 0 6px}
+.card p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.card ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14.5px}
+.card.cta-card{border-top:3px solid var(--brass)}
+.guides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:720px){.guides{grid-template-columns:minmax(0,1fr)}}
+a.gcard{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;color:inherit;text-decoration:none}
+a.gcard:hover{border-color:var(--accent)}
+a.gcard h3{margin:0;font-size:16.5px;color:var(--accent)}
+a.gcard p{margin:0;color:var(--muted);font-size:14px}
+.foot nav{display:flex;flex-wrap:wrap;gap:6px 16px}
+.foot nav a{color:var(--muted)}
+
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "How to check if a company is struck off in India", "description": "Step-by-step: check a company's status on the MCA portal, read the STK-7 strike-off notice, confirm it hasn't been restored, and screen a whole vendor list at once.", "dateModified": "2026-10-10", "mainEntityOfPage": "https://struckoffcompanies.com/guides/how-to-check-if-a-company-is-struck-off/", "author": {"@type": "Organization", "name": "Struck-Off Company Check"}, "publisher": {"@type": "Organization", "name": "Struck-Off Company Check", "url": "https://struckoffcompanies.com/"}}</script>
+</head>
+<body>
+<header class="ghero ledger">
+  <div class="wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="/"><svg width="30" height="30" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="8" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.5"/><path d="M10 12h16M10 18h10M10 24h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 27 28 9" stroke="#c9a227" stroke-width="2.4" stroke-linecap="round"/></svg> Struck-Off Company Check</a>
+      <div class="links"><a class="plain" href="/guides/">Guides</a><a class="btn ghost" href="/login/">Sign in</a><a class="btn primary" href="/login/?mode=signup">Request access</a></div>
+    </nav>
+    <div class="in">
+      <div class="crumbs"><a href="/">Home</a><span aria-hidden="true">›</span><a href="/guides/">Guides</a></div>
+      <h1>How to check if a company is struck off in India</h1>
+      <p>Four checks that tell you whether a vendor or customer still exists as a company, and how to document the result for audit.</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="glayout">
+    <article class="prose">
+      <h2>1. Find the company's CIN</h2>
+      <p>Every company registered in India has a 21-character Corporate Identification Number (CIN), for example <code>U74999MH2015PTC123456</code>. LLPs have an LLPIN such as <code>AAB-1234</code>. You'll usually find it on:</p>
+      <ul>
+        <li>the vendor's invoice, letterhead or website footer (companies must print their CIN under section 12(3)(c) of the Companies Act, 2013);</li>
+        <li>the vendor master in your ERP or Tally, or the vendor registration form;</li>
+        <li>the MCA portal, by searching the company name.</li>
+      </ul>
+      <p>Searching by CIN is more reliable than by name: names change, and many companies have near-identical names.</p>
+
+      <h2>2. Check the status on the MCA portal</h2>
+      <p>On the Ministry of Corporate Affairs website, open <strong>MCA Services → Master Data → View Company or LLP Master Data</strong>, enter the CIN or name, and read the <strong>Company Status</strong> field.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Status</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td>Active</td><td>The company exists and is not in strike-off or winding-up proceedings.</td></tr>
+          <tr><td>Strike Off</td><td>The Registrar of Companies (RoC) has removed the name from the register under section 248. The company stands dissolved.</td></tr>
+          <tr><td>Under process of Striking Off</td><td>A strike-off notice (STK-5 or STK-6) has been published; the company may be struck off soon.</td></tr>
+          <tr><td>Amalgamated, Dissolved, Under Liquidation, Under CIRP</td><td>Other ways a company stops trading normally. Treat these as red flags too.</td></tr>
+          <tr><td>Dormant (s.455)</td><td>The company has asked to be treated as inactive. It exists but should not be trading.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>3. Read the STK-7 notice</h2>
+      <p>When the RoC strikes a company off, it publishes a notice in Form <strong>STK-7</strong> in the Official Gazette, listing every company removed. The notice gives the date the company was dissolved and whether it was struck off by the RoC on its own (section 248(1)) or at the company's request (section 248(2)). Since May 2023, voluntary strike-offs are processed by the <strong>Centre for Processing Accelerated Corporate Exit (C-PACE)</strong>, which issues its own STK-7 notices.</p>
+      <p>The notice is your audit evidence: keep its number, date and the page that lists the company. <a href="/guides/section-248-strike-off-process/">How the section 248 process works →</a></p>
+
+      <h2>4. Make sure it hasn't been restored</h2>
+      <p>A struck-off company can be restored by the National Company Law Tribunal (NCLT) under section 252, up to 20 years after the STK-7 notice. Once the RoC records the NCLT order, the MCA status changes back to <strong>Active</strong>. So if a company appears in an STK-7 notice but MCA now shows it as Active, check whether it was restored before treating it as struck off. <a href="/guides/restoration-of-struck-off-company-section-252/">Restoration under section 252 →</a></p>
+
+      <h2>Checking a whole vendor list</h2>
+      <p>Checking hundreds of vendors one at a time on the MCA portal is slow. Struck-Off Company Check holds every company in the STK-7 notices from 2017 onwards and every company and LLP marked "Strike Off" in the MCA master data, 9,62,219 in all. Upload your vendor master from Excel, CSV, Tally or SAP and the portal:</p>
+      <ul>
+        <li>matches each vendor by CIN, then by exact name (ignoring "Pvt Ltd", "Limited" and punctuation), and flags similar names for review;</li>
+        <li>shows the strike-off date, RoC, notice number and source page for every hit;</li>
+        <li>flags companies that appear in a notice but are no longer "Strike Off" in MCA data, so you can check for restoration;</li>
+        <li>exports the results to Excel for your working papers.</li>
+      </ul>
+      <p>Your vendor file is read in your browser and never uploaded. <a href="/login/?mode=signup">Request access</a>.</p>
+
+      <h2>What to do if a vendor is struck off</h2>
+      <p>Stop new orders and payments until you understand the position, and ask the vendor for their NCLT restoration order if they say they are still trading. For year-end reporting, Schedule III requires companies to disclose balances and transactions with struck-off companies. <a href="/guides/dealing-with-struck-off-vendors-and-customers/">Dealing with struck-off vendors and customers →</a></p>
+
+      <p class="disclaimer" style="margin-top:2.5em">Updated 10 October 2026. A general guide based on the Companies Act, 2013 and the Companies (Removal of Names of Companies from the Register of Companies) Rules, 2016, as amended. It is not legal advice; check the current text on the MCA website or with your professional adviser before acting.</p>
+    </article>
+    <aside class="side">
+      <div class="card cta-card">
+        <h2>Check your vendors</h2>
+        <p>Search 9,62,219 struck-off companies and LLPs by name or CIN, or upload a whole vendor list from Excel or Tally.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn primary" href="/login/?mode=signup">Request access</a><a class="btn" href="/login/">Sign in</a></div>
+      </div>
+      <div class="card">
+        <h2>Guides</h2>
+        <ul>
+          <li><a href="/guides/how-to-check-if-a-company-is-struck-off/" aria-current=page>How to check if a company is struck off in India</a></li>
+          <li><a href="/guides/section-248-strike-off-process/">How a company is struck off under section 248</a></li>
+          <li><a href="/guides/restoration-of-struck-off-company-section-252/">Restoring a struck-off company under section 252</a></li>
+          <li><a href="/guides/dealing-with-struck-off-vendors-and-customers/">Dealing with struck-off vendors and customers</a></li>
+          <li><a href="/guides/struck-off-companies-by-state/">Struck-off companies in India by state and year</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer class="foot"><div class="wrap"><span>© 2026 Struck-Off Company Check · struckoffcompanies.com</span><nav aria-label="Guides"><a href="/guides/how-to-check-if-a-company-is-struck-off/">How to check if a company is struck off in India</a><a href="/guides/section-248-strike-off-process/">How a company is struck off under section 248</a><a href="/guides/restoration-of-struck-off-company-section-252/">Restoring a struck-off company under section 252</a><a href="/guides/dealing-with-struck-off-vendors-and-customers/">Dealing with struck-off vendors and customers</a><a href="/guides/struck-off-companies-by-state/">Struck-off companies in India by state and year</a></nav></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
+<script>window.SOC_CONFIG = {"url": "https://wzgqmzvdaoptisveztsm.supabase.co", "key": "sb_publishable_1Zs0ZklH00ES4zKkbqehdQ_JR9c8Tgk", "bucket": "register", "object": "register.b64.txt", "login": "/login/"};</script>
+<script>
+(function(){ try{ if(!window.SOC_CONFIG || !window.supabase) return; const sb = window.supabase.createClient(SOC_CONFIG.url, SOC_CONFIG.key);
+  let v; try{ v=localStorage.getItem("soc_visitor"); if(!v){ v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)); localStorage.setItem("soc_visitor",v); } }catch(e){ v="anon-"+String(Math.random()).slice(2,10); }
+  sb.rpc("log_visit",{p_path:location.pathname, p_visitor:v}).then(()=>{},()=>{});
+}catch(e){} })();
+</script>
+</body>
+</html>
