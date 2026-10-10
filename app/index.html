@@ -665,10 +665,19 @@ function compose(){
 async function loadBuiltin(){
   setRegProgress(.15, "Loading the STK-7 register…");
   let b64;
-  if(sb){   // website: private bucket, readable only by approved users
-    const {data, error} = await sb.storage.from(CFG.bucket).download(CFG.object);
-    if(error) throw error;
-    b64 = (await data.text()).trim();
+  if(sb){   // website: private bucket, readable only by approved users; cached in this browser until the file changes
+    let stamp = "";
+    try{ const {data:ls} = await sb.storage.from(CFG.bucket).list("", {search: CFG.object, limit: 5});
+         const o = (ls||[]).find(x=>x.name===CFG.object); if(o) stamp = (o.updated_at||"") + "|" + ((o.metadata||{}).size||""); }catch(e){}
+    const cached = stamp ? await regCacheGet() : null;
+    if(cached && cached.stamp === stamp){ b64 = cached.b64; setRegProgress(.4, "Loading the register from this browser…"); }
+    else {
+      setRegProgress(.2, "Downloading the register (first visit or new version)…");
+      const {data, error} = await sb.storage.from(CFG.bucket).download(CFG.object);
+      if(error) throw error;
+      b64 = (await data.text()).trim();
+      if(stamp) regCachePut({stamp, b64});
+    }
   } else {
     const res = await fetch("register.b64.txt");
     if(!res.ok) throw new Error("HTTP "+res.status);
@@ -685,7 +694,7 @@ async function loadBuiltin(){
   const un = (col, key) => { const L=D[key]; return c[col].map(i=>L[i]); };
   r.cin=c.cin; r.name=c.name; r.struck=c.struck; r.date=c.inc;
   r.state=un("state","state"); r.roc=un("roc","roc"); r.notice=un("notice","notice"); r.batch=un("batch","batch"); r.conf=un("conf","conf"); r.src=un("src","src");
-  r.status=new Array(n).fill("Strike Off (per notice list)");
+  r.status=r.batch.map(b => /^MCA master/.test(b) ? "Strike Off (MCA master data)" : "Strike Off (per notice list)");
   BASE = r;
   baseInfo = {name:`STK-7 register, 2017–2026 (built in, updated ${d.built})`, rows:n, kept:n, note:""};
 }
@@ -796,6 +805,8 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function idb(){ return new Promise((res,rej)=>{ try{ const q=indexedDB.open("struckoff-check",1); q.onupgradeneeded=()=>q.result.createObjectStore("kv"); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error);}catch(e){rej(e);} }); }
 async function saveCache(){ try{ const db=await idb(); const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put({E:EXTRA,files:extraFiles,at:Date.now()},"extra"); tx.objectStore("kv").delete("reg"); }catch(e){} }
 async function loadCache(){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("kv").objectStore("kv").get("extra"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function regCacheGet(){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("kv").objectStore("kv").get("register"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function regCachePut(v){ try{ const db=await idb(); db.transaction("kv","readwrite").objectStore("kv").put(v,"register"); }catch(e){} }
 async function clearCache(){ try{ const db=await idb(); const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").delete("extra"); tx.objectStore("kv").delete("reg"); }catch(e){} }
 
 /* ---------- Demo data (fictitious) ---------- */
@@ -1035,7 +1046,9 @@ function gate(title, text, actions){
   $("gateActions").innerHTML = ""; for(const a of actions||[]) $("gateActions").append(a);
 }
 function gateBtn(label, fn, primary){ const b=document.createElement("button"); b.type="button"; b.className="btn"+(primary?" primary":""); b.textContent=label; b.onclick=fn; return b; }
-async function signOut(){ try{ await sb.auth.signOut(); }catch(e){} location.replace(CFG.login); }
+async function signOut(){
+  try{ const db=await idb(); db.transaction("kv","readwrite").objectStore("kv").delete("register"); }catch(e){}   // don't leave the register on a shared device
+  try{ await sb.auth.signOut(); }catch(e){} location.replace(CFG.login); }
 async function requireApproved(){
   gate("Checking your sign-in…", "One moment.");
   const {data:{session}} = await sb.auth.getSession();
