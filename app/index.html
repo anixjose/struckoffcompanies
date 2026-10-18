@@ -1063,7 +1063,7 @@ async function requireApproved(){
   $("userEmail").textContent = name || me.email.split("@")[0];   // full name from the sign-up form or Google; else the email's user part
   $("userEmail").title = me.email; $("userBox").hidden = false; $("signOut").onclick = signOut;
   if(error){ gate("Couldn't check your access", "Please try again in a minute. ("+(error.message||error)+")", [gateBtn("Try again", ()=>location.reload(), true), gateBtn("Sign out", signOut)]); return false; }
-  if(me.status === "rejected"){ gate("Access not approved", `The request for ${me.email} was not approved. Contact the site owner if you think this is a mistake.`, [gateBtn("Sign out", signOut, true)]); return false; }
+  if(me.status === "rejected" || me.status === "suspended"){ gate("Access suspended", `Access for ${me.email} has been suspended. Contact the site owner if you think this is a mistake.`, [gateBtn("Sign out", signOut, true)]); return false; }
   if(me.status !== "approved"){ gate("Your access request is pending", `Thanks${me.full_name?", "+me.full_name:""}. We have your request for ${me.email}. You'll be able to use the checker as soon as it's approved; this page opens it once you sign in again.`, [gateBtn("Check again", ()=>location.reload(), true), gateBtn("Sign out", signOut)]); return false; }
   $("gate").hidden = true;
   if(me.is_admin){ $("tabAdmin").hidden = false; refreshReqCount(); }
@@ -1095,7 +1095,7 @@ async function loadVisitStats(){
 }
 
 /* ---------- Access requests (admins) ---------- */
-let reqFilter = "pending", reqRows = [];
+let reqFilter = "all", reqRows = [];
 const fmtDate = d => d ? new Date(d).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "";
 async function refreshReqCount(){
   const {count} = await sb.from("profiles").select("id",{count:"exact",head:true}).eq("status","pending");
@@ -1109,28 +1109,36 @@ async function loadRequests(){
   reqRows = data||[]; renderRequests(); refreshReqCount(); loadVisitStats();
 }
 function renderRequests(){
-  const c = {pending:0, approved:0, rejected:0, all:reqRows.length}; reqRows.forEach(r=>c[r.status]++);
-  $("reqChips").innerHTML = [["pending","Pending","var(--brass)"],["approved","Approved","var(--clear)"],["rejected","Rejected","var(--struck)"],["all","All","var(--faint)"]]
+  const st = r => r.status==="rejected" ? "suspended" : r.status;          // older "rejected" rows count as suspended
+  const c = {pending:0, approved:0, suspended:0, all:reqRows.length}; reqRows.forEach(r=>c[st(r)]++);
+  $("reqChips").innerHTML = [["approved","Active","var(--clear)"],["suspended","Suspended","var(--struck)"],["pending","Pending","var(--brass)"],["all","All","var(--faint)"]]
     .map(([k,l,col])=>`<button class="chip" data-r="${k}" aria-pressed="${reqFilter===k}"><span class="c num">${fmt(c[k])}</span><span class="l"><span class="dot" style="background:${col}"></span>${l}</span></button>`).join("");
   const q = ($("reqSearch").value||"").trim().toLowerCase();
-  const rows = reqRows.filter(r=>(reqFilter==="all"||r.status===reqFilter) && (!q || [r.full_name,r.email,r.company].some(x=>String(x||"").toLowerCase().includes(q))));
-  const pill = {pending:"p-pending", approved:"p-clear", rejected:"p-struck"};
+  const rows = reqRows.filter(r=>(reqFilter==="all"||st(r)===reqFilter) && (!q || [r.full_name,r.email,r.company].some(x=>String(x||"").toLowerCase().includes(q))));
+  const pill = {pending:"p-pending", approved:"p-clear", suspended:"p-struck"}, label = {approved:"active"};
   $("reqBody").innerHTML = rows.length ? rows.map(r=>{
     const self = me && r.id===me.id;
     const acts = self ? '<span class="hint">You</span>'
-      : r.status==="approved" ? `<button class="btn sm danger" data-act="rejected" data-id="${r.id}">Revoke</button>`
-      : `<span class="row" style="gap:6px"><button class="btn sm primary" data-act="approved" data-id="${r.id}">Approve</button>${r.status==="pending"?`<button class="btn sm danger" data-act="rejected" data-id="${r.id}">Reject</button>`:""}</span>`;
+      : `<span class="row" style="gap:6px">${r.status==="approved" ? `<button class="btn sm" data-act="suspended" data-id="${r.id}">Suspend</button>`
+          : `<button class="btn sm primary" data-act="approved" data-id="${r.id}">${r.status==="pending"?"Approve":"Reactivate"}</button>`}<button class="btn sm danger" data-act="delete" data-id="${r.id}">Delete</button></span>`;
     const via = r.provider ? (r.provider==="google" ? "Google" : "Email") : "";
     const unconfirmed = r.provider==="email" && !r.email_confirmed_at ? '<div class="hint">email not confirmed</div>' : "";
     return `<tr><td>${esc(r.full_name||"—")}${r.is_admin?' <span class="pill p-other">admin</span>':""}</td><td>${esc(r.email)}${unconfirmed}</td><td>${esc(r.company||"")}</td><td>${fmtDate(r.requested_at)}</td>
       <td>${via}</td><td>${r.last_sign_in_at?fmtDate(r.last_sign_in_at):(r.provider?'<span class="hint">never</span>':"")}</td>
-      <td><span class="pill ${pill[r.status]||"p-other"}">${esc(r.status)}</span>${r.decided_at?`<div class="hint">${fmtDate(r.decided_at)}</div>`:""}</td><td>${acts}</td></tr>`;
+      <td><span class="pill ${pill[st(r)]||"p-other"}">${esc(label[st(r)]||st(r))}</span>${r.decided_at?`<div class="hint">${fmtDate(r.decided_at)}</div>`:""}</td><td>${acts}</td></tr>`;
   }).join("") : `<tr><td colspan="8" class="empty">No ${q?"matching ":""}${reqFilter==="all"?"":reqFilter+" "}users.</td></tr>`;
 }
 async function decide(id, status){
-  const r = reqRows.find(x=>x.id===id);
+  const r = reqRows.find(x=>x.id===id), who = r ? r.email : "User";
+  if(status==="delete"){
+    if(!confirm(`Delete ${who}? Their account is removed completely and they would have to sign up again.`)){ renderRequests(); return; }
+    const {error} = await sb.rpc("admin_delete_user", {p_id:id});
+    $("reqMsg").textContent = error ? "Couldn't delete: "+error.message : `${who} deleted.`;
+    return loadRequests();
+  }
   const {error} = await sb.from("profiles").update({status, decided_at:new Date().toISOString(), decided_by:me.email}).eq("id", id);
-  $("reqMsg").textContent = error ? "Couldn't update: "+error.message : `${r?r.email:"User"} ${status==="approved"?"approved. They can sign in and use the checker now.":"marked as not approved."}`;
+  $("reqMsg").textContent = error ? "Couldn't update: "+error.message
+    : `${who} ${status==="approved"?"has access. They can sign in and use the checker now.":"suspended. They can no longer open the checker."}`;
   loadRequests();
 }
 $("reqChips").addEventListener("click", e=>{ const b=e.target.closest("[data-r]"); if(b){ reqFilter=b.dataset.r; renderRequests(); } });
