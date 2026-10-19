@@ -135,6 +135,9 @@ details{font-size:13px}
 details summary{cursor:pointer;color:var(--accent);font-weight:500}
 details ol{padding-left:18px;margin:8px 0 0;display:flex;flex-direction:column;gap:6px;color:var(--muted)}
 .banner{border-radius:6px;padding:10px 12px;font-size:12.5px}
+.loadbox{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px;background:var(--sunk);font-size:13.5px}
+.loadbox .lb-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.loadbox .lb-bar span{display:block;height:100%;width:5%;background:var(--brass);border-radius:3px;transition:width .25s ease}
 .banner.ask{background:var(--review-bg);color:var(--fg);border:1px solid var(--review);display:flex;flex-direction:column;gap:10px}
 .banner.ask b{color:var(--review)}
 .banner.demo{background:var(--demo-bg);color:var(--demo);border:1px dashed var(--demo)}
@@ -261,6 +264,7 @@ tr.r-review td:first-child{box-shadow:inset 3px 0 0 var(--review)}
         </div>
 
         <div id="paneSearch" role="tabpanel" aria-labelledby="tabSearch" class="panel-b">
+          <div class="loadbox" id="loadBox" role="status" aria-live="polite"><span id="loadMsg">Loading the register…</span><div class="lb-bar"><span id="loadBar"></span></div></div>
           <form class="searchbar" id="searchForm">
             <div class="field">
               <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -446,17 +450,22 @@ function statusClass(s){
 }
 const CLASS_LABEL = {struck:"Struck off", pending:"Strike-off in process", dormant:"Dormant (s.455)", active:"Active", other:"Other / inactive"};
 
-function buildIndex(){
-  const cin = new Map(), exact = new Map(), tok = new Map();
-  for(let i=0;i<R.name.length;i++){
+function indexRows(ix, from, to){
+  const {cin, exact, tok} = ix;
+  for(let i=from;i<to;i++){
     if(R.cin[i]) cin.set(R.cin[i], i);
-    const t = norm(R.name[i]); const k = t.join(" ");
-    let e = exact.get(k); if(!e){e=[];exact.set(k,e);} e.push(i);
-    const seen = new Set();
-    for(const w of t){ if(w.length<2 || seen.has(w)) continue; seen.add(w);
-      let p = tok.get(w); if(!p){p=[];tok.set(w,p);} p.push(i); }
+    const t = norm(R.name[i]), k = t.join(" ");
+    const e = exact.get(k); if(e===undefined) exact.set(k,[i]); else e.push(i);
+    for(let j=0;j<t.length;j++){ const w=t[j]; if(w.length<2 || t.indexOf(w)<j) continue;
+      const p = tok.get(w); if(p===undefined) tok.set(w,[i]); else p.push(i); }
   }
-  idx = {cin, exact, tok};
+}
+function buildIndex(){ const ix = {cin:new Map(), exact:new Map(), tok:new Map()}; indexRows(ix, 0, R.name.length); idx = ix; }
+async function buildIndexChunked(p0, p1){            // same index, built in slices so the loading bar keeps moving
+  const ix = {cin:new Map(), exact:new Map(), tok:new Map()}, n = R.name.length, step = 60000;
+  for(let s=0;s<n;s+=step){ indexRows(ix, s, Math.min(n, s+step));
+    setRegProgress(p0 + (p1-p0)*Math.min(1,(s+step)/n), `Preparing search… ${Math.min(100, Math.round((s+step)/n*100))}%`); await pause(); }
+  idx = ix;
 }
 
 function bigrams(s){const m=new Map();const x=" "+s+" ";for(let i=0;i<x.length-1;i++){const b=x.substr(i,2);m.set(b,(m.get(b)||0)+1);}return m;}
@@ -571,7 +580,11 @@ function addRows(rows, m, keepFilter){
   return kept;
 }
 
-function setRegProgress(p, text, err){ $("regBar").style.width = (p*100).toFixed(1)+"%"; $("regMsg").textContent = text||""; $("regMsg").classList.toggle("err", !!err); }
+function setRegProgress(p, text, err){ $("regBar").style.width = (p*100).toFixed(1)+"%"; $("regMsg").textContent = text||""; $("regMsg").classList.toggle("err", !!err);
+  if(regLoading && p>0){ $("loadBar").style.width = (p*100).toFixed(1)+"%"; $("loadMsg").textContent = text||""; } }
+let regLoading = true, regReady; const regReadyP = new Promise(r=>regReady=r);
+function finishLoading(){ regLoading = false; $("loadBox").hidden = true; regReady(); }
+const pause = () => new Promise(r=>setTimeout(r));                   // let the page repaint between heavy steps
 
 function loadCsv(file, keep){
   return new Promise((resolve,reject)=>{
@@ -662,35 +675,47 @@ function compose(){
   files = (BASE ? [baseInfo] : []).concat(extraFiles);
   buildIndex(); renderRegister();
 }
+async function composeAsync(){                       // start-up: index in slices, then draw the dashboard
+  const parts = [BASE, EXTRA].filter(x=>x && x.name.length);
+  if(!parts.length){ compose(); return; }
+  isDemo = false;
+  R = parts.length===1 ? parts[0] : (()=>{ const r=emptyReg(); for(const p of parts) for(const f of FIELDS) r[f]=r[f].concat(p[f]); return r; })();
+  files = (BASE ? [baseInfo] : []).concat(extraFiles);
+  idx = null; renderRegister();                        // real figures on screen first; name search follows
+  setRegProgress(.72, "Preparing search…"); await pause();
+  await buildIndexChunked(.72, 1);
+}
 
 /* Built-in register: published next to the page as gzip-compressed JSON (columns + lookup lists), base64 in a .txt file. */
+function b64bytes(b64){ const bin = atob(b64), out = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i); return out; }
 async function loadBuiltin(){
-  setRegProgress(.15, "Loading the STK-7 register…");
-  let b64;
+  setRegProgress(.05, "Loading the STK-7 register…");
+  let b64 = null, gz = null;
   if(sb){   // website: private bucket, readable only by approved users; cached in this browser until the file changes
     let stamp = "";
     try{ const {data:ls} = await sb.storage.from(CFG.bucket).list("", {search: CFG.object, limit: 5});
          const o = (ls||[]).find(x=>x.name===CFG.object); if(o) stamp = (o.updated_at||"") + "|" + ((o.metadata||{}).size||""); }catch(e){}
     const cached = stamp ? await regCacheGet() : null;
-    if(cached && cached.stamp === stamp){ b64 = cached.b64; setRegProgress(.4, "Loading the register from this browser…"); }
+    if(cached && cached.stamp === stamp && (cached.gz || cached.b64)){ setRegProgress(.35, "Opening the register saved in this browser…"); gz = cached.gz || null; b64 = cached.b64 || null; }
     else {
-      setRegProgress(.2, "Downloading the register (first visit or new version)…");
+      setRegProgress(.1, "Downloading the register (first visit or new version, about 20 MB)…");
       const {data, error} = await sb.storage.from(CFG.bucket).download(CFG.object);
       if(error) throw error;
       b64 = (await data.text()).trim();
-      if(stamp) regCachePut({stamp, b64});
+      gz = b64bytes(b64); b64 = null;
+      if(stamp) regCachePut({stamp, gz});                // saved as compressed bytes: next visit skips download and decoding
     }
   } else {
     const res = await fetch("register.b64.txt");
     if(!res.ok) throw new Error("HTTP "+res.status);
     b64 = (await res.text()).trim();
   }
-  let buf = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+  let buf = gz || b64bytes(b64);
   if(buf[0]===0x1f && buf[1]===0x8b){
-    setRegProgress(.45, "Unpacking the register…");
+    setRegProgress(.45, "Unpacking the register…"); await pause();
     buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
   }
-  setRegProgress(.7, "Reading 2 lakh+ companies…");
+  setRegProgress(.6, "Reading 9 lakh+ companies…"); await pause();
   const d = JSON.parse(new TextDecoder().decode(buf));
   const n = d.rows, c = d.cols, D = d.dicts, r = emptyReg();
   const un = (col, key) => { const L=D[key]; return c[col].map(i=>L[i]); };
@@ -842,6 +867,7 @@ const V_ICON = {
 };
 function fact(label, value, mono){ return value ? `<div><dt>${label}</dt><dd${mono?' class="mono"':""}>${esc(value)}</dd></div>` : ""; }
 function renderSearch(){
+  if(regLoading){ if(String($("q").value||"").trim()) $("searchOut").innerHTML = '<div class="hint">The register is still loading. Your search runs as soon as it is ready.</div>'; regReadyP.then(()=>{ if(String($("q").value||"").trim()) renderSearch(); }); return; }
   const q = $("q").value.trim(); const out = $("searchOut");
   if(!q){ out.innerHTML=""; return; }
   if(!R || !R.name.length){ out.innerHTML = `<div class="verdict v-review"><span class="vi">${V_ICON.review}</span><div><b>No register loaded</b><span>Load the register file on the right first.</span></div></div>`; return; }
@@ -929,6 +955,7 @@ async function readBulkFile(f){
 }
 
 async function runBulk(){
+  if(regLoading){ $("bulkMsg").textContent = "The register is still loading. The check starts as soon as it is ready…"; await regReadyP; }
   if(!R || !R.name.length){ $("bulkMsg").textContent="Load a register first."; return; }
   let items=[];
   const pasted = $("paste").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
@@ -1168,7 +1195,7 @@ const CFG = window.SOC_CONFIG || null;
 const sb = CFG && window.supabase ? window.supabase.createClient(CFG.url, CFG.key) : null;
 let me = null;
 setTab("search");
-loadDemo(); $("demoBanner").hidden=true; $("regTag").textContent="Loading…"; $("kCountS").textContent="Loading the STK-7 register…";
+R = emptyReg(); renderRegister(); $("demoList").hidden=true; $("regTag").textContent="Loading…"; $("kCount").textContent="…"; $("kCountS").textContent="Loading the STK-7 register…";
 (async()=>{
   if(CFG && !sb){ gate("Sign-in is unavailable", "The sign-in service didn't load. Check your connection and reload the page.", [gateBtn("Reload", ()=>location.reload(), true)]); return; }
   if(CFG){ $("addFilesBox").hidden = true; $("regPanel").hidden = true; await clearCache(); }   // website: register panel not shown; admins upload under Access requests   // website: the shared register only; nothing added locally
@@ -1184,7 +1211,7 @@ loadDemo(); $("demoBanner").hidden=true; $("regTag").textContent="Loading…"; $
   }
   const c = CFG ? null : await loadCache();
   if(c && c.E && c.E.name && c.E.name.length){ EXTRA=fillReg(c.E); extraFiles=c.files||[]; }
-  compose();
+  await composeAsync(); finishLoading();
   if(BASE) setRegProgress(0, `Register ready: ${fmt(R.name.length)} companies.`);
   else { setRegProgress(0, "Couldn't load the built-in register here. Demo data shown; load the register workbook to run real checks.", true); $("q").value="Demo Bluewater Logistics Pvt Ltd"; renderSearch(); }
 })();
