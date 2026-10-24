@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>How to Check Struck Off Companies in Bulk (Excel, Tally, Vendor List)</title>
+<meta name="description" content="Check a whole vendor or customer list for struck-off companies at once: export from Excel, Tally or your ERP, match by CIN and name, review similar names, and keep the results for audit.">
+<link rel="canonical" href="https://struckoffcompanies.com/guides/how-to-check-struck-off-companies-in-bulk/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://struckoffcompanies.com/guides/how-to-check-struck-off-companies-in-bulk/">
+<meta property="og:title" content="How to check struck-off companies in bulk">
+<meta property="og:description" content="Check a whole vendor or customer list for struck-off companies at once: export from Excel, Tally or your ERP, match by CIN and name, review similar names, and keep the results for audit.">
+<meta name="theme-color" content="#0e3b2e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%230e3b2e'/%3E%3Cpath d='M10 12h16M10 18h10M10 24h7' stroke='%23f4efdf' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M8 27 28 9' stroke='%23c9a227' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Shared look for the public pages (landing, sign-in): registry green + brass, same tokens as the checker. */
+:root{
+  --bg:#edf1ea; --surface:#fffdf8; --sunk:#f5f6ee; --line:#dfe4d6; --line-strong:#c6cfbc;
+  --fg:#15241d; --muted:#56675d; --faint:#87958b;
+  --ink:#0e3b2e; --ink-2:#082a20; --ink-fg:#f4efdf; --ink-muted:#a9c1b4;
+  --accent:#1f6b4f; --accent-soft:#e2eee6; --brass:#c9a227; --brass-deep:#9c7a12; --brass-soft:#f5ecce; --brass-ink:#1d1a0c;
+  --struck:#b3261e; --struck-bg:#fbeae8; --clear:#1d7048; --clear-bg:#e3f3ea;
+  --shadow:0 1px 2px rgba(14,59,46,.07),0 8px 24px rgba(14,59,46,.08);
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1511; --surface:#10201a; --sunk:#0c1a15; --line:#1e3329; --line-strong:#2b4537;
+  --fg:#e5ece6; --muted:#9db1a5; --faint:#6e8478;
+  --ink:#0b2a20; --ink-2:#061a13; --ink-fg:#efe8d2; --ink-muted:#93ac9e;
+  --accent:#5fbf94; --accent-soft:#15302a; --brass:#d9b44a; --brass-deep:#e7c66a; --brass-soft:#2c2711; --brass-ink:#161307;
+  --struck:#ff8a80; --struck-bg:#3a1714; --clear:#7fd3a6; --clear-bg:#142d22;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1511; --surface:#10201a; --sunk:#0c1a15; --line:#1e3329; --line-strong:#2b4537;
+  --fg:#e5ece6; --muted:#9db1a5; --faint:#6e8478;
+  --ink:#0b2a20; --ink-2:#061a13; --ink-fg:#efe8d2; --ink-muted:#93ac9e;
+  --accent:#5fbf94; --accent-soft:#15302a; --brass:#d9b44a; --brass-deep:#e7c66a; --brass-soft:#2c2711; --brass-ink:#161307;
+  --struck:#ff8a80; --struck-bg:#3a1714; --clear:#7fd3a6; --clear-bg:#142d22;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+a{color:var(--accent)}
+.num{font-variant-numeric:tabular-nums}
+.ledger{background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px),linear-gradient(125deg,var(--ink),var(--ink-2));color:var(--ink-fg)}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px}
+.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-family:var(--f-display);font-weight:700;font-size:19px}
+.brand svg{flex:none}
+.nav .links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:600;font-size:14.5px;border-radius:7px;padding:10px 18px;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink-fg);border-color:color-mix(in srgb,var(--brass) 55%,transparent)}
+.btn.ghost:hover{border-color:var(--brass);color:var(--brass)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+:is(a,button,input):focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.foot{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding-block:22px 34px}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Guide pages: dark ledger band with the title, then a reading column and a side card */
+.nav .links a.plain{color:inherit;text-decoration:none;font-weight:500;padding:8px 6px}
+.nav .links a.plain:hover{color:var(--brass)}
+.ghero{border-bottom:3px solid var(--brass)}
+.ghero .in{padding-block:18px 44px;max-width:52rem}
+.crumbs{font-size:13px;color:var(--ink-muted);display:flex;gap:6px;flex-wrap:wrap}
+.crumbs a{color:var(--ink-muted)}
+.ghero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.9rem,4.4vw,2.9rem);line-height:1.08;margin:12px 0 12px;text-wrap:balance}
+.ghero p{color:var(--ink-muted);font-size:1.08rem;margin:0;max-width:44rem}
+.glayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;padding-block:40px 24px;align-items:start}
+@media (max-width:900px){.glayout{grid-template-columns:minmax(0,1fr)}}
+.prose{max-width:46rem;font-size:16px;line-height:1.7}
+.prose h2{font-family:var(--f-display);font-size:clamp(1.35rem,2.6vw,1.7rem);line-height:1.2;margin:2.2em 0 .5em;text-wrap:balance}
+.prose h2:first-child{margin-top:0}
+.prose h3{font-size:1.05rem;margin:1.6em 0 .4em}
+.prose p,.prose ul,.prose ol{margin:0 0 1em}
+.prose li{margin-bottom:.35em}
+.prose .note{background:var(--brass-soft);border-left:3px solid var(--brass);border-radius:0 8px 8px 0;padding:12px 16px;font-size:15px}
+.prose .tbl{overflow-x:auto;margin:0 0 1.2em;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.prose table{border-collapse:collapse;width:100%;font-size:14.5px}
+.prose th,.prose td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.prose th{background:var(--sunk);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.prose tr:last-child td{border-bottom:0}
+.prose td.n,.prose th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prose tfoot td{font-weight:600;background:var(--sunk)}
+.prose code{font-family:var(--f-mono);font-size:.88em;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.side{position:sticky;top:20px;display:flex;flex-direction:column;gap:16px}
+@media (max-width:900px){.side{position:static}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;box-shadow:var(--shadow)}
+.card h2{font-family:var(--f-display);font-size:1.2rem;margin:0 0 6px}
+.card p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.card ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14.5px}
+.card.cta-card{border-top:3px solid var(--brass)}
+.guides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:720px){.guides{grid-template-columns:minmax(0,1fr)}}
+a.gcard{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;color:inherit;text-decoration:none}
+a.gcard:hover{border-color:var(--accent)}
+a.gcard h3{margin:0;font-size:16.5px;color:var(--accent)}
+a.gcard p{margin:0;color:var(--muted);font-size:14px}
+.foot nav{display:flex;flex-wrap:wrap;gap:6px 16px}
+.foot nav a{color:var(--muted)}
+.brand{white-space:nowrap}
+@media (max-width:600px){.brand{font-size:17px}.nav .links .btn.primary{display:none}.nav .links .btn{padding:8px 14px}}
+
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "How to check struck-off companies in bulk", "description": "Check a whole vendor or customer list for struck-off companies at once: export from Excel, Tally or your ERP, match by CIN and name, review similar names, and keep the results for audit.", "dateModified": "2026-10-24", "mainEntityOfPage": "https://struckoffcompanies.com/guides/how-to-check-struck-off-companies-in-bulk/", "author": {"@type": "Organization", "name": "Struck-Off Company Check"}, "publisher": {"@type": "Organization", "name": "Struck-Off Company Check", "url": "https://struckoffcompanies.com/"}}</script>
+</head>
+<body>
+<header class="ghero ledger">
+  <div class="wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="/"><svg width="30" height="30" viewBox="0 0 36 36" aria-hidden="true"><rect x="1" y="1" width="34" height="34" rx="8" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.5"/><path d="M10 12h16M10 18h10M10 24h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 27 28 9" stroke="#c9a227" stroke-width="2.4" stroke-linecap="round"/></svg> Struck-Off Company Check</a>
+      <div class="links"><a class="plain" href="/guides/">Guides</a><a class="btn ghost" href="/login/">Sign in</a><a class="btn primary" href="/login/?mode=signup">Create account</a></div>
+    </nav>
+    <div class="in">
+      <div class="crumbs"><a href="/">Home</a><span aria-hidden="true">›</span><a href="/guides/">Guides</a></div>
+      <h1>How to check struck-off companies in bulk</h1>
+      <p>Checking vendors one by one on the MCA portal doesn't scale. Here's how to screen a whole vendor or customer list in one go, and what to do with the results.</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="glayout">
+    <article class="prose">
+      <h2>Why check in bulk</h2>
+      <p>Auditors and finance teams usually need to know whether <em>any</em> vendor, customer or investee in a list of hundreds or thousands has been struck off: for the Schedule III disclosure of relationships with struck-off companies, for vendor onboarding and KYC, or before a payment run. The MCA portal lets you look up one company at a time, which is fine for a handful of names but not for a full vendor master.</p>
+
+      <h2>Step 1: export your list</h2>
+      <p>You need one row per party with the <strong>name</strong>, and the <strong>CIN</strong> if you have it. Common sources:</p>
+      <ul>
+        <li><strong>Tally:</strong> open the list of ledgers under Sundry Creditors (vendors) or Sundry Debtors (customers) and export it to Excel.</li>
+        <li><strong>SAP, Oracle, Zoho, Busy or another ERP:</strong> export the vendor or customer master report to Excel or CSV.</li>
+        <li><strong>Investments and shareholders:</strong> the investment register and the register of members.</li>
+      </ul>
+      <p>Keep the original column headings; you don't need to tidy the names. "ABC Pvt. Ltd.", "ABC Private Limited" and "M/s ABC P Ltd" are treated as the same company when matching.</p>
+
+      <h2>Step 2: match against the struck-off register</h2>
+      <h3>Option A: Struck-Off Company Check (fastest)</h3>
+      <ol>
+        <li><a href="/login/?mode=signup">Create a free account</a> and sign in.</li>
+        <li>Open <strong>Check a vendor / customer list</strong> and choose your Excel or CSV file, or paste names one per line.</li>
+        <li>The portal finds the name and CIN columns itself (you can change them) and checks every row against 9,65,508 struck-off companies and LLPs.</li>
+        <li>Download the results to Excel for your working papers.</li>
+      </ol>
+      <p>Your file is read in your browser and is never uploaded to our servers.</p>
+      <h3>Option B: do it yourself in Excel</h3>
+      <p>The Ministry of Corporate Affairs publishes company master data on data.gov.in, with a status for every company. You can download it, filter <strong>CompanyStatus = Strike Off</strong>, and use <code>XLOOKUP</code> or <code>VLOOKUP</code> on CIN against your list. This works well if every party has a CIN. It is harder when you only have names: names in your ledgers rarely match the MCA spelling exactly, and the master data does not show the strike-off date or notice.</p>
+
+      <h2>Step 3: read the results</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Result</th><th>What to do</th></tr></thead>
+        <tbody>
+          <tr><td>Struck off, CIN match</td><td>Certain match. Record it and follow up.</td></tr>
+          <tr><td>Struck off, exact name</td><td>Same name after removing "Pvt Ltd", punctuation and similar words. Confirm the CIN with the vendor or on the MCA portal.</td></tr>
+          <tr><td>Review: similar name</td><td>Close but not identical (e.g. "Green Leaf" vs "Greenleaf"). Check whether it is the same company before acting.</td></tr>
+          <tr><td>Review: may be restored</td><td>Listed in an STK-7 notice but no longer "Strike Off" in MCA data. The NCLT may have restored it under section 252. <a href="/guides/restoration-of-struck-off-company-section-252/">How to confirm →</a></td></tr>
+          <tr><td>Not found in register</td><td>Not in the struck-off register. It may still be dormant, under liquidation or amalgamated, so check high-value parties on the MCA portal.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>Step 4: act and document</h2>
+      <ul>
+        <li>Block struck-off vendors in the ERP and pause payments until the position is clear. <a href="/guides/dealing-with-struck-off-vendors-and-customers/">Dealing with struck-off vendors and customers →</a></li>
+        <li>For year-end reporting, record balances and transactions with each struck-off company for the Schedule III table.</li>
+        <li>Keep the exported results, with the notice number and source for each match, as audit evidence.</li>
+        <li>Repeat the check at least at each year end, and before onboarding new vendors. New STK-7 notices are published every few weeks.</li>
+      </ul>
+
+      <h2>Tips for better matches</h2>
+      <ul>
+        <li><strong>Add CINs wherever you can.</strong> A CIN match is certain; a name match needs a quick review.</li>
+        <li><strong>Leave out individuals, partnership firms and proprietorships.</strong> Only companies and LLPs can be struck off by the RoC; other parties will simply show as not found.</li>
+        <li><strong>Check former names.</strong> If a vendor changed its name, the notice may list the old one.</li>
+      </ul>
+
+      <p class="disclaimer" style="margin-top:2.5em">Updated 24 October 2026. A general guide based on the Companies Act, 2013 and the Companies (Removal of Names of Companies from the Register of Companies) Rules, 2016, as amended. It is not legal advice; check the current text on the MCA website or with your professional adviser before acting.</p>
+    </article>
+    <aside class="side">
+      <div class="card cta-card">
+        <h2>Check your vendors</h2>
+        <p>Search 9,65,508 struck-off companies and LLPs by name or CIN, or upload a whole vendor list from Excel or Tally.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn primary" href="/login/?mode=signup">Create account</a><a class="btn" href="/login/">Sign in</a></div>
+      </div>
+      <div class="card">
+        <h2>Guides</h2>
+        <ul>
+          <li><a href="/guides/how-to-check-if-a-company-is-struck-off/">How to check if a company is struck off in India</a></li>
+          <li><a href="/guides/how-to-check-struck-off-companies-in-bulk/" aria-current=page>How to check struck-off companies in bulk</a></li>
+          <li><a href="/guides/section-248-strike-off-process/">How a company is struck off under section 248</a></li>
+          <li><a href="/guides/restoration-of-struck-off-company-section-252/">Restoring a struck-off company under section 252</a></li>
+          <li><a href="/guides/dealing-with-struck-off-vendors-and-customers/">Dealing with struck-off vendors and customers</a></li>
+          <li><a href="/guides/struck-off-companies-by-state/">Struck-off companies in India by state and year</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer class="foot"><div class="wrap"><span>© 2026 Struck-Off Company Check · struckoffcompanies.com</span><nav aria-label="Guides"><a href="/guides/how-to-check-if-a-company-is-struck-off/">How to check if a company is struck off in India</a><a href="/guides/how-to-check-struck-off-companies-in-bulk/">How to check struck-off companies in bulk</a><a href="/guides/section-248-strike-off-process/">How a company is struck off under section 248</a><a href="/guides/restoration-of-struck-off-company-section-252/">Restoring a struck-off company under section 252</a><a href="/guides/dealing-with-struck-off-vendors-and-customers/">Dealing with struck-off vendors and customers</a><a href="/guides/struck-off-companies-by-state/">Struck-off companies in India by state and year</a></nav></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
+<script>window.SOC_CONFIG = {"url": "https://wzgqmzvdaoptisveztsm.supabase.co", "key": "sb_publishable_1Zs0ZklH00ES4zKkbqehdQ_JR9c8Tgk", "bucket": "register", "object": "register.b64.txt", "login": "/login/"};</script>
+<script>
+(function(){ try{ if(!window.SOC_CONFIG || !window.supabase) return; const sb = window.supabase.createClient(SOC_CONFIG.url, SOC_CONFIG.key);
+  let v; try{ v=localStorage.getItem("soc_visitor"); if(!v){ v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)); localStorage.setItem("soc_visitor",v); } }catch(e){ v="anon-"+String(Math.random()).slice(2,10); }
+  sb.rpc("log_visit",{p_path:location.pathname, p_visitor:v}).then(()=>{},()=>{});
+}catch(e){} })();
+</script>
+</body>
+</html>
